@@ -46,7 +46,6 @@ ModelDetails JSON,
 
 CREATE TABLE Trade (
     TradeId SERIAL PRIMARY KEY,
-    OrderId INT REFERENCES "Order"(OrderId),
     AccountId INT REFERENCES Account(AccountId),
     ClientId INT REFERENCES Client(ClientId),
     AssetId INT REFERENCES Asset(AssetId),
@@ -56,18 +55,19 @@ CREATE TABLE Trade (
     TradeCost NUMERIC,
     TradeType VARCHAR(50),
     TradeStatus VARCHAR(50),
+    DatePlaced TIMESTAMP CURRENT_TIMESTAMP,
+    DateCompleted TIMESTAMP CURRENT_TIMESTAMP
     DateCreated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     DateUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE AssetOrder (
-    AssetOrderId SERIAL PRIMARY KEY,
-    AccountId INT REFERENCES Account(AccountId),
+
+CREATE TABLE Price (
+    PriceId SERIAL PRIMARY KEY,
     AssetId INT REFERENCES Asset(AssetId),
-    OrderType VARCHAR(50),
-    OrderStatus VARCHAR(50),
-    OrderQuantity NUMERIC,
-    OrderUnitCost NUMERIC,
+    CurrencyCode VARCHAR(3) DEFAULT 'USD',
+    Amount VARCHAR(50),
+    PriceDate TIMESTAMP,
     DateCreated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     DateUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
