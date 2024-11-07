@@ -21,6 +21,7 @@ CREATE TABLE Asset (
     AssetCode VARCHAR(50),
     AssetName VARCHAR(100),
     AssetType VARCHAR(50),
+    AssetStatus VARCHAR(20),
     AssetDetails JSON,
     DateCreated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     DateUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -29,7 +30,8 @@ CREATE TABLE Asset (
 CREATE TABLE Instruction (
     InstructionId SERIAL PRIMARY KEY,
     InstructionType VARCHAR(20),
-InstructionDetails JSON,
+    InstructionStatus VARCHAR(20),
+    InstructionDetails JSON,
     Allocation JSON,
     DateCreated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     DateUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -38,7 +40,8 @@ InstructionDetails JSON,
 CREATE TABLE Model (
     ModelId SERIAL PRIMARY KEY,
     AssetId INT REFERENCES Asset(AssetId),
-ModelDetails JSON,
+    ModelDetails JSON,
+    ModelStatus varchar (20)
     Allocation JSON,
     DateCreated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     DateUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -66,7 +69,7 @@ CREATE TABLE Price (
     PriceId SERIAL PRIMARY KEY,
     AssetId INT REFERENCES Asset(AssetId),
     CurrencyCode VARCHAR(3) DEFAULT 'USD',
-    Amount VARCHAR(50),
+    Amount numeric
     PriceDate TIMESTAMP,
     DateCreated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     DateUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
