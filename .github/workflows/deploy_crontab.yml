@@ -1,4 +1,4 @@
-name: Deploy Crontab to Raspberry Pi
+name: Deploy to Raspberry Pi
 
 on:
   push:
@@ -6,13 +6,17 @@ on:
       - main  # or the branch you want to trigger the deployment
 
 jobs:
-  deploy-crontab:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
     # Step 1: Checkout the repository code
     - name: Checkout code
       uses: actions/checkout@v2
+
+    - name: List files in the repository
+      run: |
+        ls -alh
 
     # Step 2: Set up SSH key for authentication
     - name: Set up SSH key for authentication
@@ -35,17 +39,11 @@ jobs:
         # Add the private key to the SSH agent
         ssh-add ~/.ssh/id_rsa
 
-    # Step 3: Deploy crontab file and update crontab on Raspberry Pi
-    - name: Deploy crontab to Raspberry Pi
+    # Step 3: Deploy crontab file to the Raspberry Pi (using rsync)
+    - name: Deploy crontab.txt to Raspberry Pi
       run: |
-        # Ensure the crontab.txt file exists in the repository
-        if [ ! -f crontab.txt ]; then
-          echo "crontab.txt not found!"
-          exit 1
-        fi
-
-        # Transfer crontab.txt to Raspberry Pi
-        scp crontab.txt ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:/home/${{ secrets.PI_USER }}/crontab.txt
+        # Use rsync to copy crontab.txt from the Scheduling folder
+        rsync -avz --delete -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" ./Scheduling/crontab.txt ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:/home/${{ secrets.PI_USER }}/crontab.txt
         
         # SSH into the Raspberry Pi to install the crontab file
         ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }} << EOF
