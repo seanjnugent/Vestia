@@ -1,0 +1,23 @@
+name: Deploy to Raspberry Pi
+
+on:
+  push:
+    branches:
+      - main  # Trigger when pushing to the `main` branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # Specifies the runner (Ubuntu in this case)
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2  # Checkout the repository code
+
+    - name: Deploy to Raspberry Pi
+      env:
+        PI_USER: ${{ secrets.PI_USER }}  # Use the secrets stored in GitHub
+        PI_HOST: ${{ secrets.PI_HOST }}
+        PI_PATH: ${{ secrets.PI_PATH }}  # The destination path on your Raspberry Pi
+      run: |
+        # Rsync to copy the files to the Raspberry Pi
+        rsync -avz --delete ./automation $PI_USER@$PI_HOST:$PI_PATH
