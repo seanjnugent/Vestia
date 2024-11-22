@@ -39,4 +39,19 @@ jobs:
     - name: Deploy to Raspberry Pi
       run: |
         # Use rsync to copy files to the Raspberry Pi
-        rsync -avz --delete -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" ./Automation ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:${{ secrets.PI_PATH }}
+        rsync -avz --delete -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" ./automation/ ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:${{ secrets.PI_PATH }}
+
+    # Step 4: Deploy crontab file and update crontab on Raspberry Pi
+    - name: Deploy crontab to Raspberry Pi
+      run: |
+        # Transfer crontab.txt to Raspberry Pi
+        scp crontab.txt ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:/home/${{ secrets.PI_USER }}/crontab.txt
+        
+        # SSH into the Raspberry Pi to install the crontab file
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }} << EOF
+            # Install the new crontab
+            crontab /home/${{ secrets.PI_USER }}/crontab.txt
+            
+            # Confirm that the crontab was updated
+            echo "Crontab updated successfully."
+        EOF
