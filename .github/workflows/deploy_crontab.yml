@@ -39,7 +39,12 @@ jobs:
         # Add the private key to the SSH agent
         ssh-add ~/.ssh/id_rsa
 
-    # Step 3: Deploy crontab file to the Raspberry Pi (using rsync)
+    # Step 3: Ensure the target directory exists on Raspberry Pi
+    - name: Ensure target directory exists on Raspberry Pi
+      run: |
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }} "mkdir -p /home/${{ secrets.PI_USER }}"
+
+    # Step 4: Deploy crontab file to Raspberry Pi
     - name: Deploy crontab.txt to Raspberry Pi
       run: |
         # Use rsync to copy crontab.txt from the Scheduling folder
