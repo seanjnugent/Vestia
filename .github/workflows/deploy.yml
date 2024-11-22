@@ -10,18 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # Step 1: Checkout the repository code
     - name: Checkout code
       uses: actions/checkout@v2
 
+    # Step 2: Set up SSH key for authentication
     - name: Set up SSH key for authentication
       run: |
+        # Create the .ssh directory if it doesn't exist
         mkdir -p ~/.ssh
+        
+        # Write the private key stored in GitHub Secrets to the id_rsa file
         echo "${{ secrets.PI_SSH_KEY }}" > ~/.ssh/id_rsa
+        
+        # Set correct permissions for the private key
         chmod 600 ~/.ssh/id_rsa
+        
+        # Add the Raspberry Pi to the known hosts file to avoid SSH verification prompts
         ssh-keyscan -H ${{ secrets.PI_HOST }} >> ~/.ssh/known_hosts
+        
+        # Start the SSH agent
         eval $(ssh-agent -s)
+        
+        # Add the private key to the SSH agent
         ssh-add ~/.ssh/id_rsa
 
+    # Step 3: Deploy files to the Raspberry Pi using rsync
     - name: Deploy to Raspberry Pi
       run: |
+        # Use rsync to copy files to the Raspberry Pi
         rsync -avz --delete -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" ./automation ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:${{ secrets.PI_PATH }}
