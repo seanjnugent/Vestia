@@ -1,0 +1,13 @@
+stages:
+  - deploy
+
+deploy_to_raspberry_pi:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client rsync
+  script:
+    - rsync -avz --delete ./deploy_folder/ $PI_USER@$PI_HOST:/path/to/your/scripts/on/pi
+    - ssh $PI_USER@$PI_HOST "cd /path/to/your/scripts/on/pi && python3 script_to_run.py"
+  only:
+    - main  # or the branch you want to deploy from
