@@ -13,9 +13,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Add Raspberry Pi to known hosts
+    - name: Set up SSH key for authentication
       run: |
         mkdir -p ~/.ssh
+        echo "${{ secrets.PI_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        # Ensure the Raspberry Pi's SSH key is added to known_hosts
         ssh-keyscan -H ${{ secrets.PI_HOST }} >> ~/.ssh/known_hosts
 
     - name: Deploy to Raspberry Pi
@@ -24,5 +27,5 @@ jobs:
         PI_HOST: ${{ secrets.PI_HOST }}
         PI_PATH: ${{ secrets.PI_PATH }}
       run: |
-        # Use SSH to copy files to the Pi
+        # Use rsync to copy files to the Pi
         rsync -avz --delete ./automation $PI_USER@$PI_HOST:$PI_PATH
