@@ -45,7 +45,7 @@ jobs:
         fi
 
         # Transfer crontab.txt to Raspberry Pi
-        scp crontab.txt ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:/home/${{ secrets.PI_USER }}/crontab.txt
+        scp ./Vestia/crontab.txt ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:/home/${{ secrets.PI_USER }}/crontab.txt
         
         # SSH into the Raspberry Pi to install the crontab file
         ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }} << EOF
