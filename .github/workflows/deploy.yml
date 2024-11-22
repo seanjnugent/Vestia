@@ -24,5 +24,4 @@ jobs:
 
     - name: Deploy to Raspberry Pi
       run: |
-        # Run rsync with verbose output to debug the connection
-        rsync -avz --delete -e "ssh -i ~/.ssh/id_rsa" ./automation ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:${{ secrets.PI_PATH }}
+        rsync -avz --delete -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" ./automation ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:${{ secrets.PI_PATH }}
