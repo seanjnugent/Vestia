@@ -16,6 +16,7 @@ jobs:
     - name: Deploy to Raspberry Pi
       env:
         PI_USER: ${{ secrets.PI_USER }}  # Use the secrets stored in GitHub
+        PI_PASSWORD: ${{ secrets.PI_PASSWORD }}  # Add the password secret
         PI_HOST: ${{ secrets.PI_HOST }}
         PI_PATH: ${{ secrets.PI_PATH }}  # The destination path on your Raspberry Pi
       run: |
