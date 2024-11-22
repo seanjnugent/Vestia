@@ -3,7 +3,7 @@ name: Deploy to Raspberry Pi
 on:
   push:
     branches:
-      - main
+      - main  # or the branch you want to trigger the deployment
 
 jobs:
   deploy:
@@ -13,11 +13,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up SSH key
+    - name: Add Raspberry Pi to known hosts
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.PI_SSH_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.PI_HOST }} >> ~/.ssh/known_hosts
 
     - name: Deploy to Raspberry Pi
       env:
@@ -25,4 +24,5 @@ jobs:
         PI_HOST: ${{ secrets.PI_HOST }}
         PI_PATH: ${{ secrets.PI_PATH }}
       run: |
+        # Use SSH to copy files to the Pi
         rsync -avz --delete ./automation $PI_USER@$PI_HOST:$PI_PATH
