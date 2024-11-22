@@ -1,0 +1,24 @@
+name: Deploy to Raspberry Pi
+
+on:
+  push:
+    branches:
+      - main  # or the branch you want to trigger the deployment
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Deploy to Raspberry Pi
+      env:
+        PI_USER: ${{ secrets.PI_USER }}
+        PI_HOST: ${{ secrets.PI_HOST }}
+        PI_PATH: ${{ secrets.PI_PATH }}
+      run: |
+        # Use SSH to copy files to the Pi
+        rsync -avz --delete ./ $PI_USER@$PI_HOST:$PI_PATH
+        ssh $PI_USER@$PI_HOST "cd $PI_PATH && python3 script_to_run.py" # run script on Pi
