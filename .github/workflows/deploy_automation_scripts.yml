@@ -8,17 +8,16 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
     # Step 1: Checkout the repository code
     - name: Checkout code
       uses: actions/checkout@v2
-
+    
     - name: List files in the repository
       run: |
         ls -alh
-
-
+    
     # Step 2: Set up SSH key for authentication
     - name: Set up SSH key for authentication
       run: |
@@ -40,8 +39,28 @@ jobs:
         # Add the private key to the SSH agent
         ssh-add ~/.ssh/id_rsa
 
-    # Step 3: Deploy files to the Raspberry Pi using rsync
-    - name: Deploy to Raspberry Pi
+    # Step 3: Deploy Automation folder to Raspberry Pi
+    - name: Deploy Automation folder to Raspberry Pi
       run: |
         # Use rsync to copy files to the Raspberry Pi
         rsync -avz --delete -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" ./Automation/ ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:${{ secrets.PI_PATH }}
+
+    # Step 4: Ensure the Scheduler directory exists on Raspberry Pi
+    - name: Ensure Scheduler directory exists
+      run: |
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }} "mkdir -p /home/${{ secrets.PI_USER }}/Scheduler"
+
+    # Step 5: Deploy and install crontab
+    - name: Deploy and install crontab
+      run: |
+        # Use rsync to copy crontab.txt from the Scheduling folder
+        rsync -avz --delete -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" ./Scheduling/crontab.txt ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }}:/home/${{ secrets.PI_USER }}/Scheduler/crontab.txt
+        
+        # SSH into the Raspberry Pi to install the crontab file
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.PI_USER }}@${{ secrets.PI_HOST }} << EOF
+          # Install the new crontab
+          crontab /home/${{ secrets.PI_USER }}/Scheduler/crontab.txt
+          
+          # Confirm that the crontab was updated
+          echo "Crontab updated successfully."
+        EOF
