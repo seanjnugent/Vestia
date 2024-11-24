@@ -7,4 +7,11 @@
 # │ │ │ │ │
 # │ │ │ │ │
 # * * * * * command to execute
-0 0 * * * /path/to/your/script.sh
+# Every midnight for prices
+0 0 * * * /usr/bin/python3 /vestia/ext_update_prices.py
+
+# Every hour for clients
+0 * * * * /usr/bin/python3 /vestia/tst_manufacture_clients_random.py
+
+# Every 5 minutes for trades
+*/5 * * * * /usr/bin/python3 /vestia/tst_manufacture_trades.py
