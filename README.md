@@ -1,4 +1,4 @@
-# Vestia: Data Engineering on Minimal Hardware
+# Vestia: Data Engineering Testing on Minimal Hardware
 
 **Vestia** is a testing ground for some data engineering tools with minimal hardware and performance in mind. The goal is to load-test PostgreSQL databases via automation and scheduling on a Raspberry Pi Model B from 2012 which I couldn't bring myself to throw out and wanted to do something on it. Over time, this will extend to big data, data streaming and governance tools (on more powerful hardware).
 
