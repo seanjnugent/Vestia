@@ -65,7 +65,7 @@ The **`deploy_automation_scripts.yml`** workflow automates deployment. It:
 
 ---
 
-##Future Plans
+## Future Plans
 - Add better error handling to the scripts (because things always go wrong).  
 - Build more comprehensive test cases for automation scripts.  
 - Expand crontab tasks for additional operations.  
@@ -74,7 +74,7 @@ The **`deploy_automation_scripts.yml`** workflow automates deployment. It:
 
 ---
 
-##Known Issues
+## Known Issues
 - Workflow occasionally complains about missing files (usually my fault).  
 - Testing framework needs improvement—currently just running stuff and hoping it works.
 
