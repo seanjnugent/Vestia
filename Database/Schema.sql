@@ -55,8 +55,8 @@ table "model" {
   "model_details" json
   "model_status" varchar(20)
   "allocation" json
-  "date_created" timestamp
-  "date_updated" timestamp
+  "date_created" timestamp [default: `current_timestamp`]
+  "date_updated" timestamp [default: `current_timestamp`]
 }
 
 
@@ -75,8 +75,8 @@ table "asset_trade" {
   "corporate_action_id" int
   "date_placed" timestamp
   "date_completed" timestamp
-  "date_created" timestamp
-  "date_updated" timestamp
+  "date_created" timestamp [default: `current_timestamp`]
+  "date_updated" timestamp [default: `current_timestamp`]
 }
 
 
@@ -90,8 +90,8 @@ table "cash_trade" {
   "cash_trade_note" varchar(100)
   "cash_trade_status" varchar(50)
   "date_completed" timestamp
-  "date_created" timestamp
-  "date_updated" timestamp
+  "date_created" timestamp [default: `current_timestamp`]
+  "date_updated" timestamp [default: `current_timestamp`]
 }
 
 
@@ -102,7 +102,7 @@ table "asset_price" {
   "amount" numeric
   "price_date" timestamp
   "date_created" timestamp
-  "date_updated" timestamp
+  "date_updated" timestamp [default: `current_timestamp`]
 }
 
 
@@ -112,31 +112,19 @@ table "corporate_action" {
   "corporate_action_type" varchar(20)
   "ex_date" timestamp
   "date_posted" timestamp
-  "date_created" timestamp
-  "date_updated" timestamp
+  "date_created" timestamp [default: `current_timestamp`]
+  "date_updated" timestamp [default: `current_timestamp`]
   }
 
 
 ref:"client"."clientid" < "account"."clientid"
-
-
 ref:"account"."account_id" < "asset_trade"."account_id"
 ref:"account"."account_id" < "cash_trade"."account_id"
-
-
 ref:"asset"."asset_id" < "asset_trade"."asset_id"
-
 ref:"model"."model_id" < "account"."model_id"
-
 ref:"instruction"."instruction_id" < "asset_trade"."instruction_id"
-
-
 ref:"model"."model_id" < "asset_trade"."model_id"
-
-
 ref:"asset"."asset_id" < "asset_price"."asset_id"
-
-
 ref:"cash_trade"."corporate_action_id" < "corporate_action"."corporate_action_id"
 ref:"asset_trade"."corporate_action_id" < "corporate_action"."corporate_action_id"
 ref:"asset"."asset_id" < "corporate_action"."asset_id"
