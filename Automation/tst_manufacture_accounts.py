@@ -20,7 +20,7 @@ faker = Faker()
 
 # Fetch client IDs
 with engine.connect() as conn:
-    result = conn.execute(text("SELECT clientid FROM public.client where clientid not in (select clientid from public.account) ORDER BY RANDOM() DESC limit 25"))
+    result = conn.execute(text("SELECT clientid FROM public.client where client_id not in (select client_id from public.account) ORDER BY RANDOM() DESC limit 25"))
     client_ids = [row[0] for row in result]
 
 # Define function to get a random date within the past year
@@ -42,9 +42,9 @@ for clientid in client_ids:
     
     for i in range(account_count):
         account_data = {
-            "clientid": clientid,
-            "accounttype": account_type,
-            "accountname": account_name_template.format(i + 1)
+            "client_id": clientid,
+            "account_type": account_type,
+            "account_name": account_name_template.format(i + 1)
         }
         accounts_data.append(account_data)
 
@@ -52,8 +52,8 @@ for clientid in client_ids:
 with engine.begin() as conn:
     for account in accounts_data:
         query = text("""
-            INSERT INTO account (clientid, accounttype, accountname)
-            VALUES (:clientid, :accounttype, :accountname)
+            INSERT INTO account (client_id, account_type, account_name)
+            VALUES (:client_id, :account_type, :account_name)
         """)
         conn.execute(query, account)
 
