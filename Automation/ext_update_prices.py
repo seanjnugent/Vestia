@@ -105,6 +105,8 @@ if all_data:
                 SET 
                     amount = EXCLUDED.amount,
                     dateupdated = CURRENT_TIMESTAMP;  -- Update the amount and dateupdated if the record already exists
+
+                drop table prctemp
             """)
 
             # Commit the transaction
