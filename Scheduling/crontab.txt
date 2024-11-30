@@ -5,6 +5,6 @@
 # │ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday is 0)
 # │ │ │ │ │
 # │ │ │ │ │
-0 0 * * * /usr/bin/python3 /vestia/ext_update_prices.py
-0 * * * * /usr/bin/python3 /vestia/tst_manufacture_clients_random.py
-*/5 * * * * /usr/bin/python3 /vestia/tst_manufacture_trades.py
+# 0 0 * * * /usr/bin/python3 /vestia/ext_update_prices.py
+# 0 * * * * /usr/bin/python3 /vestia/tst_manufacture_clients_random.py
+# */5 * * * * /usr/bin/python3 /vestia/tst_manufacture_trades.py
