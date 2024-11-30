@@ -61,7 +61,7 @@ def insert_bulk_cash_deposits(deposits_data):
     """Insert a bulk of cash deposit trades into the database."""
     query = """
         INSERT INTO cash_trade (
-            account_id, cash_trade_amount, currency_code, instruction_id, corporate_action_id, 
+            account_id, amount, currency_code, instruction_id, corporate_action_id, 
             cash_trade_note, cash_trade_status, date_completed, date_created, date_updated)
         VALUES %s
     """
