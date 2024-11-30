@@ -122,9 +122,7 @@ def generate_investor(faker, country_code):
             "risk_tolerance": random.choice(["Low", "Medium", "High"])
         }),
         "EmailAddress": faker.email(),
-        "PhoneNumber": faker.phone_number(),
-        "DateCreated": datetime.now(),
-        "DateUpdated": datetime.now()
+        "PhoneNumber": faker.phone_number()
     }
 
 # Insert generated data into the database
@@ -135,9 +133,8 @@ def insert_investors_into_db(investors):
         insert_query = """
         INSERT INTO Client (
             FirstName, Surname, DateOfBirth, CountryOfResidence,
-            ResidentialAddress, ClientProfile, EmailAddress, PhoneNumber,
-            DateCreated, DateUpdated
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+            ResidentialAddress, ClientProfile, EmailAddress, PhoneNumber
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
         """
         for investor in investors:
             cursor.execute(insert_query, (
@@ -148,9 +145,7 @@ def insert_investors_into_db(investors):
                 investor["ResidentialAddress"],
                 investor["ClientProfile"],
                 investor["EmailAddress"],
-                investor["PhoneNumber"],
-                investor["DateCreated"],
-                investor["DateUpdated"]
+                investor["PhoneNumber"]
             ))
         conn.commit()
     except Exception as e:

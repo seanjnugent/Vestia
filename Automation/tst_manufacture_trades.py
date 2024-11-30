@@ -24,7 +24,7 @@ def get_cash_balance(conn, account_id):
         cur.execute("""
             SELECT total_cash_balance
             FROM public.vw_cash_balance
-            WHERE accountid = %s
+            WHERE account_id = %s
             ORDER BY total_cash_balance DESC
             LIMIT 1;
         """, (account_id,))
@@ -34,9 +34,9 @@ def get_cash_balance(conn, account_id):
 def get_asset_balance(conn, account_id):
     with conn.cursor() as cur:
         cur.execute("""
-            SELECT accountid, assetid, asset_holding
+            SELECT account_id, asset_id, asset_holding
             FROM public.vw_asset_balance
-            WHERE accountid = %s
+            WHERE account_id = %s
             ORDER BY asset_holding DESC
             LIMIT 1;
         """, (account_id,))
@@ -46,7 +46,7 @@ def get_asset_balance(conn, account_id):
 def get_random_account_for_buy(conn):
     with conn.cursor() as cur:
         cur.execute("""
-            SELECT accountid
+            SELECT account_id
             FROM public.vw_cash_balance
             WHERE total_cash_balance > 0
             ORDER BY total_cash_balance DESC
@@ -57,7 +57,7 @@ def get_random_account_for_buy(conn):
 def get_random_account_for_sell(conn):
     with conn.cursor() as cur:
         cur.execute("""
-            SELECT accountid
+            SELECT account_id
             FROM public.vw_asset_balance
             WHERE asset_holding > 0
             ORDER BY asset_holding DESC
@@ -68,21 +68,20 @@ def get_random_account_for_sell(conn):
 def get_asset_list(conn):
     with conn.cursor() as cur:
         cur.execute("""
-            SELECT assetid, latestprice, currencycode
-            FROM public.vw_latest_price
-            WHERE assetid != 699;
+            SELECT asset_id, latest_price, currency_code
+            FROM public.vw_latest_price;
         """)
         return cur.fetchall()
 
 def get_asset_price(conn, asset_id):
     with conn.cursor() as cur:
         cur.execute("""
-            SELECT latestprice
+            SELECT latest_price, currency_code
             FROM public.vw_latest_price
-            WHERE assetid = %s;
+            WHERE asset_id = %s;
         """, (asset_id,))
         result = cur.fetchone()
-    return result[0] if result else None
+    return result if result else None
 
 def simulate_trade(conn, trade_count):
     try:
@@ -114,6 +113,11 @@ def simulate_trade(conn, trade_count):
                 # Select a random asset to trade
                 asset_id, asset_price, currency_code = random.choice(assets)
 
+                # Ensure currency_code is available
+                if not currency_code:
+                    print(f"Error: Asset {asset_id} does not have a currency code. Skipping trade.")
+                    return
+
                 # Determine the maximum quantity the user can afford to buy based on the cash balance
                 max_quantity = cash_balance // asset_price
 
@@ -127,22 +131,24 @@ def simulate_trade(conn, trade_count):
                 trade_quantity = random.randint(1, max_quantity)
                 trade_cost = trade_quantity * asset_price
 
-                # Insert buy trade into the trade table
+                # Insert buy trade into the asset_trade table
                 with conn.cursor() as cur:
                     cur.execute("""
-                        INSERT INTO public.trade (
-                            accountid, assetid, tradequantity, tradecost, tradetype, tradestatus, datecreated, dateupdated
+                        INSERT INTO public.asset_trade (
+                            account_id, asset_id, asset_trade_quantity, asset_trade_unit_cost, asset_trade_type, asset_trade_status, date_placed, date_created, date_updated
                         )
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                    """, (account_id, asset_id, trade_quantity, trade_cost, 'Buy', 'Completed', datetime.now(), datetime.now()))
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (account_id, asset_id, trade_quantity, asset_price, 'Buy', 'Completed', datetime.now(), datetime.now(), datetime.now()))
 
+                # Deduct cash for the buy transaction (insert into cash_trade table)
+                trade_note = f"Bought {trade_quantity} units of {asset_id}"
                 with conn.cursor() as cur:
                     cur.execute("""
-                    INSERT INTO public.trade (
-                        accountid, assetid, tradequantity, tradecost, tradetype, tradestatus, datecreated, dateupdated
-                    )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                """, (account_id, 699, trade_quantity, -trade_cost, 'Buy', 'Completed', datetime.now(), datetime.now()))
+                        INSERT INTO public.cash_trade (
+                            account_id, amount, currency_code, cash_trade_status, cash_trade_note, date_created, date_updated
+                        )
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """, (account_id, -trade_cost, currency_code, 'Completed', trade_note, datetime.now(), datetime.now()))
 
                 conn.commit()
 
@@ -157,33 +163,36 @@ def simulate_trade(conn, trade_count):
                 if asset_balance:
                     _, asset_id, asset_holding = asset_balance
 
-                    # Fetch asset price
-                    asset_price = get_asset_price(conn, asset_id)
-
-                    if not asset_price:
-                        print(f"Error: No price found for asset {asset_id}. Skipping sell.")
+                    # Fetch asset price and currency code
+                    asset_data = get_asset_price(conn, asset_id)
+                    if asset_data:
+                        asset_price, currency_code = asset_data
+                    else:
+                        print(f"Error: No price or currency found for asset {asset_id}. Skipping sell.")
                         return
 
                     # Determine the trade quantity (randomly between 1 and asset_holding)
                     trade_quantity = random.randint(1, asset_holding)
                     trade_cost = trade_quantity * asset_price
 
-                    # Insert sell trade into the trade table
+                    # Insert sell trade into the asset_trade table
                     with conn.cursor() as cur:
                         cur.execute("""
-                            INSERT INTO public.trade (
-                                accountid, assetid, tradequantity, tradecost, tradetype, tradestatus, datecreated, dateupdated
+                            INSERT INTO public.asset_trade (
+                                account_id, asset_id, asset_trade_quantity, asset_trade_unit_cost, asset_trade_type, asset_trade_status, date_placed, date_created, date_updated
                             )
-                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                        """, (account_id, asset_id, trade_quantity * -1, trade_cost * -1, 'Sell', 'Completed', datetime.now(), datetime.now()))
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        """, (account_id, asset_id, -trade_quantity, asset_price, 'Sell', 'Completed', datetime.now(), datetime.now(), datetime.now()))
 
+                    # Add cash for the sell transaction (insert into cash_trade table)
+                    trade_note = f"Sold {trade_quantity} units of {asset_id}"
                     with conn.cursor() as cur:
                         cur.execute("""
-                    INSERT INTO public.trade (
-                        accountid, assetid, tradequantity, tradecost, tradetype, tradestatus, datecreated, dateupdated
-                    )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                """, (account_id, 699, trade_quantity, trade_cost, 'Sell', 'Completed', datetime.now(), datetime.now()))
+                            INSERT INTO public.cash_trade (
+                                account_id, amount, currency_code, cash_trade_status, cash_trade_note, date_created, date_updated
+                            )
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        """, (account_id, trade_cost, currency_code, 'Completed', trade_note, datetime.now(), datetime.now()))
 
                     conn.commit()
 
@@ -192,8 +201,8 @@ def simulate_trade(conn, trade_count):
     except Exception as e:
         print(f"Error simulating trade: {e}")
 
-# Example usage: Simulate trades for 5 random accounts
-for i in range(15):  # Limit to 5 trades
+# Example usage: Simulate trades for 15 random accounts
+for i in range(25):  # Limit to 15 trades
     simulate_trade(conn, i)
 
 conn.close()

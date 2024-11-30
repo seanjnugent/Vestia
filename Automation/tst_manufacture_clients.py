@@ -57,9 +57,7 @@ def generate_investor(faker, country_code):
             "risk_tolerance": random.choice(["Low", "Medium", "High"])
         }),
         "EmailAddress": faker.email(),
-        "PhoneNumber": faker.phone_number(),
-        "DateCreated": datetime.now(),
-        "DateUpdated": datetime.now()
+        "PhoneNumber": faker.phone_number()
     }
 
 # Insert generated data into the database

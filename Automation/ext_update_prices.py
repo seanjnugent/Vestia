@@ -4,7 +4,6 @@ from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 import os
 import psycopg2
-from psycopg2 import sql
 
 # Load environment variables from .env file
 load_dotenv()
@@ -21,7 +20,7 @@ engine = create_engine(db_url)
 # Fetch symbols from the Asset table in PostgreSQL
 symbols = []
 with engine.connect() as conn:
-    result = conn.execute(text("SELECT AssetCode FROM Asset WHERE AssetStatus = 'Active' and Asset_Type != 'Cash' "))
+    result = conn.execute(text("SELECT Asset_Code FROM Asset WHERE Asset_Status = 'Active' "))
     for row in result:
         symbols.append(row[0])
 
@@ -57,7 +56,7 @@ if all_data:
     print("Sample data from combined DataFrame:")
     print(combined_df.head())
 
-    # Create the temporary table 'pricestaging_temp'
+    # Create the temporary table 'prctemp'
     with engine.connect() as conn:
         conn.execute(text("""
             CREATE TEMPORARY TABLE IF NOT EXISTS prctemp (
@@ -71,9 +70,9 @@ if all_data:
                 Volume INTEGER
             );
         """))
-        
-        # Insert data into the temporary table 'pricestaging_temp'
-        combined_df.to_sql('prctemp', con=engine, if_exists='replace', index=False)
+
+        # Use pandas to insert data into the temporary table
+        combined_df.to_sql('prctemp', con=engine, if_exists='append', index=False)
 
     # Now move the data from the temporary table to the final table
     with psycopg2.connect(
@@ -82,9 +81,9 @@ if all_data:
         with conn.cursor() as cursor:
             # SQL for upserting data from temporary table to the final price table
             cursor.execute("""
-                INSERT INTO public.price (assetid, currencycode, amount, pricedate, datecreated, dateupdated)
+                INSERT INTO public.asset_price (asset_id, currency_code, amount, price_date, date_created, date_updated)
                 SELECT 
-                    a.assetid,
+                    a.asset_id,
                     'USD'::varchar(3),  -- Assuming USD is the currency for all assets
                     pst."Close"::numeric(18, 5),  -- Using 'Close' from the temporary table
                     pst."Date"::timestamp,  -- Using 'Date' from the temporary table
@@ -99,14 +98,14 @@ if all_data:
                     FROM prctemp pst
                     ORDER BY pst."Symbol", pst."Date" DESC  -- Ensure the latest record is picked for each Symbol and Date
                 ) pst
-                JOIN public.asset a ON pst."Symbol" = a.assetcode
-                ON CONFLICT (assetid, pricedate) 
+                JOIN public.asset a ON pst."Symbol" = a.asset_code
+                ON CONFLICT (asset_id, price_date) 
                 DO UPDATE 
                 SET 
                     amount = EXCLUDED.amount,
-                    dateupdated = CURRENT_TIMESTAMP;  -- Update the amount and dateupdated if the record already exists
+                    date_updated = CURRENT_TIMESTAMP;  -- Update the amount and dateupdated if the record already exists
 
-                drop table prctemp
+                DROP TABLE IF EXISTS prctemp;  -- Drop the temporary table after use
             """)
 
             # Commit the transaction
