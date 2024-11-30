@@ -20,7 +20,7 @@ faker = Faker()
 
 # Fetch client IDs
 with engine.connect() as conn:
-    result = conn.execute(text("SELECT clientid FROM public.client where client_id not in (select client_id from public.account) ORDER BY RANDOM() DESC limit 25"))
+    result = conn.execute(text("SELECT client_id FROM public.client where client_id not in (select client_id from public.account) ORDER BY RANDOM() DESC limit 25"))
     client_ids = [row[0] for row in result]
 
 # Define function to get a random date within the past year
