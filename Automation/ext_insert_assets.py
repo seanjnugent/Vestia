@@ -5,9 +5,9 @@ from psycopg2 import sql
 from dotenv import load_dotenv
 import os
 from datetime import datetime
-import json  # Add this line at the top of your script
+import json  # For handling JSON asset details
 
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
 
 # Database connection setup
@@ -16,22 +16,25 @@ db_password = os.getenv("DB_PASSWORD")
 db_host = os.getenv("DB_HOST")
 db_name = os.getenv("DB_NAME")
 
-# Establish the connection using psycopg2
+# Establish the database connection
 conn = psycopg2.connect(
     dbname=db_name, user=db_user, password=db_password, host=db_host
 )
 print(f"Connected to database: {db_name}")
 
+# Function to upsert asset data
 def upsert_asset_data(symbol, name, asset_type, status, sector, industry, market_cap, shares_outstanding,
                       dividend_yield, pe_ratio, eps, fifty_two_week_high, fifty_two_week_low, volume,
                       average_volume, currency, country, logo_url, datecreated, dateupdated):
     query = """
-        INSERT INTO asset (
+        INSERT INTO public.asset (
             asset_code, asset_name, asset_type, asset_status, currency_code, asset_details, 
-            date_created, date_updated
+            sector, industry, market_cap, shares_outstanding, dividend_yield, 
+            pe_ratio, eps, fifty_two_week_high, fifty_two_week_low, volume, 
+            average_volume, country, logo_url, date_created, date_updated
         )
         VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
         )
         ON CONFLICT (asset_code) DO UPDATE SET
             asset_name = EXCLUDED.asset_name,
@@ -39,7 +42,20 @@ def upsert_asset_data(symbol, name, asset_type, status, sector, industry, market
             asset_status = EXCLUDED.asset_status,
             currency_code = EXCLUDED.currency_code,
             asset_details = EXCLUDED.asset_details,
-            date_updated = EXCLUDED.date_updated
+            sector = EXCLUDED.sector,
+            industry = EXCLUDED.industry,
+            market_cap = EXCLUDED.market_cap,
+            shares_outstanding = EXCLUDED.shares_outstanding,
+            dividend_yield = EXCLUDED.dividend_yield,
+            pe_ratio = EXCLUDED.pe_ratio,
+            eps = EXCLUDED.eps,
+            fifty_two_week_high = EXCLUDED.fifty_two_week_high,
+            fifty_two_week_low = EXCLUDED.fifty_two_week_low,
+            volume = EXCLUDED.volume,
+            average_volume = EXCLUDED.average_volume,
+            country = EXCLUDED.country,
+            logo_url = EXCLUDED.logo_url,
+            date_updated = EXCLUDED.date_updated;
     """
     
     asset_details = {
@@ -64,8 +80,10 @@ def upsert_asset_data(symbol, name, asset_type, status, sector, industry, market
                 query,
                 (
                     symbol, name, asset_type, status, currency, 
-                    json.dumps(asset_details),  # Convert asset details dict to JSON
-                    datecreated, dateupdated
+                    json.dumps(asset_details), sector, industry, market_cap, 
+                    shares_outstanding, dividend_yield, pe_ratio, eps, 
+                    fifty_two_week_high, fifty_two_week_low, volume, 
+                    average_volume, country, logo_url, datecreated, dateupdated
                 ),
             )
             conn.commit()
@@ -74,7 +92,6 @@ def upsert_asset_data(symbol, name, asset_type, status, sector, industry, market
     except Exception as e:
         print(f"Error upserting data for symbol {symbol}: {e}")
         return 0
-
 
 # Load symbols from your CSV file
 csv_file = "constituents.csv"
@@ -88,9 +105,9 @@ for symbol in symbols:
         stock = yf.Ticker(symbol)
         info = stock.info
 
-        # Extract data, with safe defaults if a field is missing
+        # Extract data with safe defaults
         name = info.get("longName", symbol)
-        asset_type = info.get("sector", "Unknown")
+        asset_type = info.get("quoteType", "Unknown")  # Updated to use `quoteType`
         status = "Active"
         sector = info.get("sector")
         industry = info.get("industry")
@@ -105,7 +122,7 @@ for symbol in symbols:
         average_volume = info.get("averageVolume")
         currency = info.get("currency")
         country = info.get("country")
-        logo_url = info.get("logo_url")  # Adjust if a different source for logos
+        logo_url = info.get("logo_url")
 
         datecreated = datetime.now()
         dateupdated = datetime.now()
