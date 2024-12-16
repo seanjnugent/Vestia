@@ -1,209 +1,266 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
+import { 
+  CreditCard, 
+  ArrowRightLeft, 
+  Check, 
+  ChevronLeft, 
+  ChevronRight, 
+  DollarSign 
+} from "lucide-react";
 
-const ManageCash = () => {
-  const [step, setStep] = useState(1);
-  const [action, setAction] = useState("");
-  const [selectedAccount, setSelectedAccount] = useState(null);
-  const [amount, setAmount] = useState("");
-  const [bankAccount, setBankAccount] = useState("");
-
-  const accounts = [
-    { name: "Investment Account", cash: 1500 },
-    { name: "Savings Account", cash: 800 },
-  ];
-
-  const bankAccounts = ["Bank of England - 1234", "HSBC - 5678"];
-
-  const handleNext = () => setStep((prev) => prev + 1);
-  const handleBack = () => setStep((prev) => prev - 1);
-
-  const progress = (step / 5) * 100;
+const AnimatedProgressBar = ({ currentStep }) => {
+  // Calculate progress based on current step directly
+  const progress = (currentStep / 5) * 100;
 
   return (
-    <div className="p-6 bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100 min-h-screen">
-      <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-lg p-6">
-        <h1 className="text-3xl font-bold mb-6 text-center text-indigo-700">
-          Manage Cash
-        </h1>
+    <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+      <div 
+        className="bg-gradient-to-r from-indigo-500 to-purple-600 h-full transition-all duration-300 ease-in-out" 
+        style={{ width: `${progress}%` }}
+      />
+    </div>
+  );
+};
 
-        {/* Progress Bar */}
-        <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
-          <div
-            className="bg-indigo-600 h-2 rounded-full transition-all"
-            style={{ width: `${progress}%` }}
-          ></div>
+const StepButton = ({ children, onClick, disabled = false, variant = "primary" }) => {
+  const variantStyles = {
+    primary: "bg-indigo-600 hover:bg-indigo-700 text-white",
+    secondary: "bg-gray-200 hover:bg-gray-300 text-gray-800",
+    accent: "bg-green-500 hover:bg-green-600 text-white"
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`
+        flex items-center justify-center gap-2 py-3 px-6 rounded-xl 
+        transition-all duration-300 ease-in-out
+        disabled:opacity-50 disabled:cursor-not-allowed
+        ${variantStyles[variant]}
+      `}
+    >
+      {children}
+    </button>
+  );
+};
+
+const ManageCashModern = () => {
+  const [step, setStep] = useState(1);
+  const [transaction, setTransaction] = useState({
+    type: "",
+    account: null,
+    amount: "",
+    bankAccount: ""
+  });
+
+  const accounts = useMemo(() => [
+    { 
+      name: "Investment Account", 
+      cash: 1500, 
+      icon: <CreditCard className="text-indigo-600" /> 
+    },
+    { 
+      name: "Savings Account", 
+      cash: 800, 
+      icon: <DollarSign className="text-green-600" /> 
+    }
+  ], []);
+
+  const bankAccounts = useMemo(() => [
+    { 
+      name: "Bank of England", 
+      number: "1234", 
+      icon: <ArrowRightLeft className="text-blue-600" /> 
+    },
+    { 
+      name: "HSBC", 
+      number: "5678", 
+      icon: <ArrowRightLeft className="text-green-600" /> 
+    }
+  ], []);
+
+  const updateTransaction = useCallback((updates) => {
+    setTransaction(prev => ({ ...prev, ...updates }));
+  }, []);
+
+  const handleNext = useCallback(() => {
+    if (step < 5) setStep(prev => prev + 1);
+  }, [step]);
+
+  const handleBack = useCallback(() => {
+    if (step > 1) setStep(prev => prev - 1);
+  }, [step]);
+
+  const renderStepContent = () => {
+    const stepComponents = {
+      1: (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-gray-800">Select Transaction Type</h2>
+          <div className="grid grid-cols-2 gap-4">
+            {["deposit", "withdraw"].map(type => (
+              <button
+                key={type}
+                onClick={() => {
+                  updateTransaction({ type });
+                  handleNext(); // Automatically move to next step
+                }}
+                className={`
+                  py-4 rounded-xl border-2 transition-all duration-300
+                  flex items-center justify-center gap-3
+                  ${transaction.type === type 
+                    ? "bg-indigo-50 border-indigo-500 text-indigo-700" 
+                    : "border-gray-300 text-gray-600 hover:border-gray-500"}
+                `}
+              >
+                {type === "deposit" ? "💰 Deposit" : "💸 Withdraw"}
+              </button>
+            ))}
+          </div>
         </div>
-
-        {/* Steps */}
-        {step === 1 && (
-          <div className="space-y-4">
-            <p className="text-lg font-semibold text-gray-700">Select Action:</p>
-            <div className="space-y-2">
+      ),
+      2: (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-gray-800">Select Account</h2>
+          <div className="space-y-2">
+            {accounts.map((acc) => (
               <button
-                className={`w-full py-3 px-4 rounded-lg border text-left ${
-                  action === "deposit"
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-50 border-gray-300"
-                }`}
-                onClick={() => setAction("deposit")}
+                key={acc.name}
+                onClick={() => {
+                  updateTransaction({ account: acc.name });
+                  handleNext();
+                }}
+                className={`
+                  w-full py-4 rounded-xl border-2 flex items-center justify-between 
+                  transition-all duration-300
+                  ${transaction.account === acc.name 
+                    ? "bg-indigo-50 border-indigo-500 text-indigo-700" 
+                    : "border-gray-300 text-gray-600 hover:border-gray-500"}
+                `}
               >
-                Deposit Cash
+                <div className="flex items-center gap-3">
+                  {acc.icon}
+                  {acc.name}
+                </div>
+                <span>£{acc.cash}</span>
               </button>
-              <button
-                className={`w-full py-3 px-4 rounded-lg border text-left ${
-                  action === "withdraw"
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-50 border-gray-300"
-                }`}
-                onClick={() => setAction("withdraw")}
-              >
-                Withdraw Cash
-              </button>
-            </div>
-            <button
+            ))}
+          </div>
+          <div className="flex justify-between">
+            <StepButton onClick={handleBack} variant="secondary">
+              <ChevronLeft /> Back
+            </StepButton>
+          </div>
+        </div>
+      ),
+      3: (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-gray-800">Enter Amount</h2>
+          <input
+            type="number"
+            value={transaction.amount}
+            onChange={(e) => updateTransaction({ amount: e.target.value })}
+            className="w-full py-3 px-4 border-2 rounded-xl focus:outline-none focus:border-indigo-500"
+            placeholder="Enter amount"
+          />
+          <div className="flex justify-between">
+            <StepButton onClick={handleBack} variant="secondary">
+              <ChevronLeft /> Back
+            </StepButton>
+            <StepButton 
               onClick={handleNext}
-              disabled={!action}
-              className="w-full py-3 px-6 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+              disabled={!transaction.amount}
             >
-              Next
-            </button>
+              Next <ChevronRight />
+            </StepButton>
           </div>
-        )}
-
-        {step === 2 && (
-          <div className="space-y-4">
-            <p className="text-lg font-semibold text-gray-700">
-              Select Account:
-            </p>
-            <div className="space-y-2">
-              {accounts.map((acc, index) => (
-                <button
-                  key={index}
-                  className={`w-full py-3 px-4 rounded-lg border text-left ${
-                    selectedAccount === acc.name
-                      ? "bg-indigo-600 text-white"
-                      : "bg-gray-50 border-gray-300"
-                  }`}
-                  onClick={() => setSelectedAccount(acc.name)}
+        </div>
+      ),
+      4: (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-gray-800">Select Bank Account</h2>
+          <div className="space-y-2">
+            {bankAccounts.map((acc) => (
+              <button
+                key={acc.name}
+                onClick={() => {
+                  updateTransaction({ bankAccount: acc.name });
+                  handleNext();
+                }}
+                className={`
+                  w-full py-4 rounded-xl border-2 flex items-center justify-between 
+                  transition-all duration-300
+                  ${transaction.bankAccount === acc.name 
+                    ? "bg-indigo-50 border-indigo-500 text-indigo-700" 
+                    : "border-gray-300 text-gray-600 hover:border-gray-500"}
+                `}
+              >
+                <div className="flex items-center gap-3">
+                  {acc.icon}
+                  {acc.name}
+                </div>
+                <span>**** {acc.number}</span>
+              </button>
+            ))}
+          </div>
+          <div className="flex justify-between">
+            <StepButton onClick={handleBack} variant="secondary">
+              <ChevronLeft /> Back
+            </StepButton>
+          </div>
+        </div>
+      ),
+      5: (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold text-gray-800">Confirm Transaction</h2>
+          <div className="bg-gray-50 p-4 rounded-xl space-y-2">
+            {Object.entries(transaction).map(([key, value]) => (
+              value && (
+                <div 
+                  key={key} 
+                  className="flex justify-between text-gray-700 border-b last:border-b-0 pb-2 last:pb-0"
                 >
-                  {acc.name} - £{acc.cash}
-                </button>
-              ))}
-            </div>
-            <div className="flex justify-between mt-4">
-              <button
-                onClick={handleBack}
-                className="py-3 px-6 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-              >
-                Back
-              </button>
-              <button
-                onClick={handleNext}
-                disabled={!selectedAccount}
-                className="py-3 px-6 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
+                  <span className="capitalize">{key}:</span>
+                  <span className="font-medium">{value}</span>
+                </div>
+              )
+            ))}
           </div>
-        )}
+          <div className="flex justify-between">
+            <StepButton onClick={handleBack} variant="secondary">
+              <ChevronLeft /> Back
+            </StepButton>
+            <StepButton 
+              onClick={() => alert("Transaction Complete! 🎉")} 
+              variant="accent"
+            >
+              <Check /> Submit
+            </StepButton>
+          </div>
+        </div>
+      )
+    };
 
-        {step === 3 && (
-          <div className="space-y-4">
-            <p className="text-lg font-semibold text-gray-700">Enter Amount:</p>
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full py-3 px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-              placeholder="Enter amount"
-            />
-            <div className="flex justify-between mt-4">
-              <button
-                onClick={handleBack}
-                className="py-3 px-6 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-              >
-                Back
-              </button>
-              <button
-                onClick={handleNext}
-                disabled={!amount}
-                className="py-3 px-6 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
+    return stepComponents[step] || null;
+  };
 
-        {step === 4 && (
-          <div className="space-y-4">
-            <p className="text-lg font-semibold text-gray-700">
-              Select Bank Account:
-            </p>
-            <div className="space-y-2">
-              {bankAccounts.map((acc, index) => (
-                <button
-                  key={index}
-                  className={`w-full py-3 px-4 rounded-lg border text-left ${
-                    bankAccount === acc
-                      ? "bg-indigo-600 text-white"
-                      : "bg-gray-50 border-gray-300"
-                  }`}
-                  onClick={() => setBankAccount(acc)}
-                >
-                  {acc}
-                </button>
-              ))}
-            </div>
-            <div className="flex justify-between mt-4">
-              <button
-                onClick={handleBack}
-                className="py-3 px-6 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-              >
-                Back
-              </button>
-              <button
-                onClick={handleNext}
-                disabled={!bankAccount}
-                className="py-3 px-6 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white shadow-2xl rounded-2xl overflow-hidden">
+        <div className="p-6">
+          <h1 className="text-3xl font-bold mb-4 text-center text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
+            Cash Management
+          </h1>
+          
+          <AnimatedProgressBar currentStep={step} />
+          
+          <div className="mt-6 space-y-4">
+            {renderStepContent()}
           </div>
-        )}
-
-        {step === 5 && (
-          <div className="space-y-4">
-            <p className="text-lg font-semibold text-gray-700">
-              Confirm Transaction:
-            </p>
-            <ul className="text-gray-700 space-y-2">
-              <li>Action: {action === "deposit" ? "Deposit" : "Withdraw"}</li>
-              <li>Account: {selectedAccount}</li>
-              <li>Amount: £{amount}</li>
-              <li>Bank Account: {bankAccount}</li>
-            </ul>
-            <div className="flex justify-between mt-4">
-              <button
-                onClick={handleBack}
-                className="py-3 px-6 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-              >
-                Back
-              </button>
-              <button
-                onClick={() => alert("Transaction Submitted!")}
-                className="py-3 px-6 bg-green-500 text-white rounded-lg hover:bg-green-600"
-              >
-                Submit
-              </button>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
 };
 
-export default ManageCash;
+export default ManageCashModern;

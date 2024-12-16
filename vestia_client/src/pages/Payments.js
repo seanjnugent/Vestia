@@ -9,16 +9,14 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-// Enhanced mock trade data with more dynamic information
-const trades = [
+// Enhanced mock Payment data with more dynamic information
+const payments = [
   {
     id: 1,
     date: '2024-12-12',
-    type: 'Buy',
+    type: 'Deposit',
     account: 'Investment Account',
     status: 'Completed',
-    instrumentCode: 'GOOGL',
-    units: 10,
     sum: '£1,500',
     color: 'bg-green-100',
     icon: '📈'
@@ -26,11 +24,9 @@ const trades = [
   {
     id: 2,
     date: '2024-12-11',
-    type: 'Sell',
+    type: 'Withdrawal',
     account: 'Savings Account',
     status: 'Pending',
-    instrumentCode: 'BABA',
-    units: 5,
     sum: '£800',
     color: 'bg-yellow-100',
     icon: '⏳'
@@ -38,11 +34,9 @@ const trades = [
   {
     id: 3,
     date: '2024-12-10',
-    type: 'Buy',
+    type: 'Deposit',
     account: 'Investment Account',
     status: 'Completed',
-    instrumentCode: 'AAPL',
-    units: 15,
     sum: '£2,200',
     color: 'bg-blue-100',
     icon: '📊'
@@ -66,7 +60,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-const TradesTable = () => {
+const PaymentsTable = () => {
   const [sortConfig, setSortConfig] = useState({ 
     key: 'date', 
     direction: 'desc' 
@@ -74,13 +68,13 @@ const TradesTable = () => {
   const [filter, setFilter] = useState('');
   const navigate = useNavigate();
 
-  const sortedAndFilteredTrades = useMemo(() => {
-    let result = [...trades];
+  const sortedAndFilteredpayments = useMemo(() => {
+    let result = [...payments];
 
     // Filter
     if (filter) {
-      result = result.filter(trade => 
-        Object.values(trade).some(value => 
+      result = result.filter(Payment => 
+        Object.values(Payment).some(value => 
           value.toString().toLowerCase().includes(filter.toLowerCase())
         )
       );
@@ -110,13 +104,13 @@ const TradesTable = () => {
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
-            Trade History
+            Payment History
           </h1>
           <div className="flex items-center space-x-4">
             <div className="relative">
               <input 
                 type="text" 
-                placeholder="Search trades..." 
+                placeholder="Search payments..." 
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
                 className="
@@ -128,7 +122,7 @@ const TradesTable = () => {
               <Filter className="absolute left-3 top-3 text-gray-400" />
             </div>
             <button
-              onClick={() => navigate("/new-trade")}
+              onClick={() => navigate("/manage-cash")}
               className="
                 flex items-center gap-2 px-4 py-2 
                 bg-gradient-to-r from-indigo-600 to-purple-600 
@@ -136,7 +130,7 @@ const TradesTable = () => {
                 hover:scale-105 transition-all duration-300
               "
             >
-              <PlusCircle size={18} /> New Trade
+              <PlusCircle size={18} /> New Payment
             </button>
           </div>
         </div>
@@ -146,8 +140,7 @@ const TradesTable = () => {
             <thead className="bg-gray-100 border-b">
               <tr>
                 {[
-                  'Date', 'Type', 'Account', 'Status', 
-                  'Instrument Code', 'Units', 'Sum'
+                  'Date', 'Type', 'Account', 'Status', 'Sum'
                 ].map((header) => (
                   <th 
                     key={header}
@@ -172,9 +165,9 @@ const TradesTable = () => {
               </tr>
             </thead>
             <tbody>
-              {sortedAndFilteredTrades.map((trade) => (
+              {sortedAndFilteredpayments.map((Payment) => (
                 <tr 
-                  key={trade.id} 
+                  key={Payment.id} 
                   className="
                     hover:bg-indigo-50 transition-all 
                     duration-300 border-b last:border-b-0
@@ -182,35 +175,33 @@ const TradesTable = () => {
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <span className="mr-3">{trade.icon}</span>
-                      {trade.date}
+                      <span className="mr-3">{Payment.icon}</span>
+                      {Payment.date}
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <span className={`
                       px-3 py-1 rounded-full text-xs font-medium
-                      ${trade.type === 'Buy' 
+                      ${Payment.type === 'Withdrawal' 
                         ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'}
+                        : 'bg-blue-100 text-blue-800'}
                     `}>
-                      {trade.type}
+                      {Payment.type}
                     </span>
                   </td>
-                  <td className="px-6 py-4">{trade.account}</td>
+                  <td className="px-6 py-4">{Payment.account}</td>
                   <td className="px-6 py-4">
-                    <StatusBadge status={trade.status} />
+                    <StatusBadge status={Payment.status} />
                   </td>
-                  <td className="px-6 py-4">{trade.instrumentCode}</td>
-                  <td className="px-6 py-4">{trade.units}</td>
-                  <td className="px-6 py-4 font-semibold">{trade.sum}</td>
+                  <td className="px-6 py-4 font-semibold">{Payment.sum}</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          {sortedAndFilteredTrades.length === 0 && (
+          {sortedAndFilteredpayments.length === 0 && (
             <div className="text-center py-8 text-gray-500">
-              No trades found 🕹️
+              No payments found 🕹️
             </div>
           )}
         </div>
@@ -224,4 +215,4 @@ const TradesTable = () => {
   );
 };
 
-export default TradesTable;
+export default PaymentsTable;

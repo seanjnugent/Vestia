@@ -17,8 +17,8 @@ const Accounts = () => {
         <h1 className="text-2xl font-bold text-gray-800">Accounts</h1>
         <button
           className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600"
-          onClick={() => alert('Create New Account Modal Coming Soon!')}
-        >
+          onClick={() => navigate("/new-account")}
+          >
           Create New Account
         </button>
       </div>
