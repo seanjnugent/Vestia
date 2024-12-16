@@ -19,7 +19,7 @@ engine = create_engine(db_url)
 # Fetch symbols from the Asset table in PostgreSQL
 symbols = []
 with engine.connect() as conn:
-    result = conn.execute(text("SELECT AssetCode FROM Asset where AssetStatus = 'Active'"))
+    result = conn.execute(text("SELECT AssetCode FROM Asset where AssetStatus = 'Active' and Asset_Type != 'Cash'"))
     for row in result:
         symbols.append(row[0])
 

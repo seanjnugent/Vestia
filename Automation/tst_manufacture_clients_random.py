@@ -66,9 +66,6 @@ def get_faker_instance(country_code):
     return Faker(locale)
 
 # Fetch adjusted country proportions from the database
-import decimal
-
-# Fetch adjusted country proportions from the database
 def get_country_weights():
     conn = pool.getconn()
     try:
@@ -76,25 +73,20 @@ def get_country_weights():
         query = """
         WITH country_data AS (
             SELECT 
-                countryofresidence,
+                country_of_residence,
                 COUNT(*) AS country_count
             FROM public.client
-            GROUP BY countryofresidence
+            GROUP BY country_of_residence
         )
         SELECT
-            countryofresidence,
+            country_of_residence,
             (country_count * 100.0 / SUM(country_count) OVER ()) AS original_percentage
         FROM country_data
-        ORDER BY 2 DESC
+        ORDER BY original_percentage DESC
         """
         cursor.execute(query)
         results = cursor.fetchall()
-        weights = {}
-        for row in results:
-            country_code = row[0]  # countryofresidence
-            original_percentage = float(row[1])  # original_percentage
-            weights[country_code] = original_percentage
-        return weights
+        return {row[0]: float(row[1]) for row in results}  # Country and weight as a dictionary
     except Exception as e:
         print(f"Error fetching country weights: {e}")
         return {}
@@ -102,29 +94,26 @@ def get_country_weights():
         cursor.close()
         pool.putconn(conn)
 
-
 # Generate a single investor record aligned to the schema
 def generate_investor(faker, country_code):
     return {
-        "FirstName": faker.first_name(),
-        "Surname": faker.last_name(),
-        "DateOfBirth": faker.date_of_birth(minimum_age=18, maximum_age=90),
-        "CountryOfResidence": country_code,
-        "ResidentialAddress": json.dumps({
+        "first_name": faker.first_name(),
+        "surname": faker.last_name(),
+        "date_of_birth": faker.date_of_birth(minimum_age=18, maximum_age=90),
+        "country_of_residence": country_code,
+        "residential_address": json.dumps({
             "street": faker.street_address(),
             "city": faker.city(),
             "postcode": faker.postcode(),
             "country": country_code
         }, ensure_ascii=False),
-        "ClientProfile": json.dumps({
+        "client_profile": json.dumps({
             "investment_experience": random.choice(["Beginner", "Intermediate", "Advanced"]),
             "investment_goal": random.choice(["Growth", "Income", "Balanced"]),
             "risk_tolerance": random.choice(["Low", "Medium", "High"])
         }),
-        "EmailAddress": faker.email(),
-        "PhoneNumber": faker.phone_number(),
-        "DateCreated": datetime.now(),
-        "DateUpdated": datetime.now()
+        "email_address": faker.email(),
+        "phone_number": faker.phone_number()
     }
 
 # Insert generated data into the database
@@ -133,24 +122,21 @@ def insert_investors_into_db(investors):
     try:
         cursor = conn.cursor()
         insert_query = """
-        INSERT INTO Client (
-            FirstName, Surname, DateOfBirth, CountryOfResidence,
-            ResidentialAddress, ClientProfile, EmailAddress, PhoneNumber,
-            DateCreated, DateUpdated
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+        INSERT INTO client (
+            first_name, surname, date_of_birth, country_of_residence,
+            residential_address, client_profile, email_address, phone_number
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
         """
         for investor in investors:
             cursor.execute(insert_query, (
-                investor["FirstName"],
-                investor["Surname"],
-                investor["DateOfBirth"],
-                investor["CountryOfResidence"],
-                investor["ResidentialAddress"],
-                investor["ClientProfile"],
-                investor["EmailAddress"],
-                investor["PhoneNumber"],
-                investor["DateCreated"],
-                investor["DateUpdated"]
+                investor["first_name"],
+                investor["surname"],
+                investor["date_of_birth"],
+                investor["country_of_residence"],
+                investor["residential_address"],
+                investor["client_profile"],
+                investor["email_address"],
+                investor["phone_number"]
             ))
         conn.commit()
     except Exception as e:
@@ -163,6 +149,10 @@ def insert_investors_into_db(investors):
 # Main function to generate and insert investors
 def generate_investors(number_of_investors):
     country_weights = get_country_weights()
+    if not country_weights:
+        print("No country weights found; aborting.")
+        return
+
     country_choices = list(country_weights.keys())
     weight_values = list(country_weights.values())
 

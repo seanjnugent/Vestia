@@ -5,8 +5,9 @@ from psycopg2 import sql
 from dotenv import load_dotenv
 import os
 from datetime import datetime
+import json  # For handling JSON asset details
 
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
 
 # Database connection setup
@@ -15,30 +16,32 @@ db_password = os.getenv("DB_PASSWORD")
 db_host = os.getenv("DB_HOST")
 db_name = os.getenv("DB_NAME")
 
-# Establish the connection using psycopg2
+# Establish the database connection
 conn = psycopg2.connect(
     dbname=db_name, user=db_user, password=db_password, host=db_host
 )
 print(f"Connected to database: {db_name}")
 
+# Function to upsert asset data
 def upsert_asset_data(symbol, name, asset_type, status, sector, industry, market_cap, shares_outstanding,
                       dividend_yield, pe_ratio, eps, fifty_two_week_high, fifty_two_week_low, volume,
                       average_volume, currency, country, logo_url, datecreated, dateupdated):
     query = """
-        INSERT INTO asset (
-            assetcode, assetname, asset_subtype, assetstatus, ticker_symbol, sector, industry, market_cap,
-            shares_outstanding, dividend_yield, pe_ratio, eps, fifty_two_week_high, fifty_two_week_low,
-            volume, average_volume, currency, country, logo_url, datecreated, dateupdated
+        INSERT INTO public.asset (
+            asset_code, asset_name, asset_type, asset_status, currency_code, asset_details, 
+            sector, industry, market_cap, shares_outstanding, dividend_yield, 
+            pe_ratio, eps, fifty_two_week_high, fifty_two_week_low, volume, 
+            average_volume, country, logo_url, date_created, date_updated
         )
         VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s,
-            %s, %s, %s, %s, %s, %s, %s,
-            %s, %s, %s, %s, %s, %s
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
         )
-        ON CONFLICT (assetcode) DO UPDATE SET
-            assetname = EXCLUDED.assetname,
-            asset_subtype = EXCLUDED.asset_type,
-            assetstatus = EXCLUDED.assetstatus,
+        ON CONFLICT (asset_code) DO UPDATE SET
+            asset_name = EXCLUDED.asset_name,
+            asset_type = EXCLUDED.asset_type,
+            asset_status = EXCLUDED.asset_status,
+            currency_code = EXCLUDED.currency_code,
+            asset_details = EXCLUDED.asset_details,
             sector = EXCLUDED.sector,
             industry = EXCLUDED.industry,
             market_cap = EXCLUDED.market_cap,
@@ -50,20 +53,37 @@ def upsert_asset_data(symbol, name, asset_type, status, sector, industry, market
             fifty_two_week_low = EXCLUDED.fifty_two_week_low,
             volume = EXCLUDED.volume,
             average_volume = EXCLUDED.average_volume,
-            currency = EXCLUDED.currency,
             country = EXCLUDED.country,
             logo_url = EXCLUDED.logo_url,
-            dateupdated = EXCLUDED.dateupdated
+            date_updated = EXCLUDED.date_updated;
     """
     
+    asset_details = {
+        "sector": sector,
+        "industry": industry,
+        "market_cap": market_cap,
+        "shares_outstanding": shares_outstanding,
+        "dividend_yield": dividend_yield,
+        "pe_ratio": pe_ratio,
+        "eps": eps,
+        "fifty_two_week_high": fifty_two_week_high,
+        "fifty_two_week_low": fifty_two_week_low,
+        "volume": volume,
+        "average_volume": average_volume,
+        "logo_url": logo_url,
+        "country": country
+    }
+
     try:
         with conn.cursor() as cursor:
             cursor.execute(
                 query,
                 (
-                    symbol, name, asset_type, status, symbol, sector, industry, market_cap,
-                    shares_outstanding, dividend_yield, pe_ratio, eps, fifty_two_week_high, fifty_two_week_low,
-                    volume, average_volume, currency, country, logo_url, datecreated, dateupdated
+                    symbol, name, asset_type, status, currency, 
+                    json.dumps(asset_details), sector, industry, market_cap, 
+                    shares_outstanding, dividend_yield, pe_ratio, eps, 
+                    fifty_two_week_high, fifty_two_week_low, volume, 
+                    average_volume, country, logo_url, datecreated, dateupdated
                 ),
             )
             conn.commit()
@@ -85,9 +105,9 @@ for symbol in symbols:
         stock = yf.Ticker(symbol)
         info = stock.info
 
-        # Extract data, with safe defaults if a field is missing
+        # Extract data with safe defaults
         name = info.get("longName", symbol)
-        asset_type = info.get("sector", "Unknown")
+        asset_type = info.get("quoteType", "Unknown")  # Updated to use `quoteType`
         status = "Active"
         sector = info.get("sector")
         industry = info.get("industry")
@@ -102,7 +122,7 @@ for symbol in symbols:
         average_volume = info.get("averageVolume")
         currency = info.get("currency")
         country = info.get("country")
-        logo_url = info.get("logo_url")  # Adjust if a different source for logos
+        logo_url = info.get("logo_url")
 
         datecreated = datetime.now()
         dateupdated = datetime.now()
