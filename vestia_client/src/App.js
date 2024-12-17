@@ -11,6 +11,9 @@ import NewTrade from './pages/NewTrade';
 import Profile from './pages/Profile';
 import Payments from './pages/Payments';
 import NewAccount from './pages/NewAccount';
+import Research from './pages/StockResearch';
+import Documents from './pages/Documents';
+import Register from './components/Register';
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('token'); // Check for token
@@ -40,6 +43,10 @@ function App() {
                     <Route path="/new-account" element={<NewAccount />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/payments" element={<Payments />} />
+                    <Route path="/research" element={<Research />} />
+                    <Route path="/documents" element={<Documents />} />
+                    <Route path="/register" element={<Register />} />
+
                   </Routes>
                 </main>
               </div>

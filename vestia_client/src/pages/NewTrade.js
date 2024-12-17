@@ -1,22 +1,12 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Search, 
-  CheckCircle2, 
-  ArrowLeftRight, 
-  Coins, 
-  RefreshCw 
-} from "lucide-react";
+import { Search, CheckCircle2, ArrowLeftRight, Coins, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const AnimatedSpinner = () => (
   <motion.div
     animate={{ rotate: 360 }}
-    transition={{ 
-      repeat: Infinity, 
-      duration: 1, 
-      ease: "linear" 
-    }}
+    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
   >
     <RefreshCw className="text-blue-500 w-8 h-8" />
   </motion.div>
@@ -40,19 +30,20 @@ const NewTrade = () => {
   const [stage, setStage] = useState(0);
   const [account, setAccount] = useState("");
   const [tradeType, setTradeType] = useState("buy");
-  const [buyInput, setBuyInput] = useState({ search: "", selectedAsset: null, units: 0 });
+  const [buyInput, setBuyInput] = useState({ search: "", selectedAssets: [] });
   const [sellInputs, setSellInputs] = useState({});
   const [selectedSellAsset, setSelectedSellAsset] = useState(null);
+  const [unitsAmount, setUnitsAmount] = useState({});
 
   const handleNextStage = () => {
-    if (stage === 1 && tradeType === "buy" && !buyInput.selectedAsset) return; // Require asset for buy
+    if (stage === 1 && tradeType === "buy" && !buyInput.selectedAssets.length) return; // Require asset for buy
     if (stage === 1 && tradeType === "sell" && !selectedSellAsset) return; // Require asset for sell
     setStage((prev) => prev + 1);
   };
 
   const handleAssetSelection = (asset) => {
     if (tradeType === "buy") {
-      setBuyInput((prev) => ({ ...prev, selectedAsset: asset }));
+      setBuyInput((prev) => ({ ...prev, selectedAssets: [...prev.selectedAssets, asset] }));
     } else {
       setSelectedSellAsset(asset);
     }
@@ -109,7 +100,7 @@ const NewTrade = () => {
                 onClick={() => setTradeType("buy")}
                 className={`w-1/2 py-2.5 rounded-lg transition-colors ${
                   tradeType === "buy" ? "bg-blue-500 text-white" : "bg-gray-100"
-                }`}
+                  }`}
               >
                 Buy
               </button>
@@ -139,10 +130,7 @@ const NewTrade = () => {
                   key={asset.code}
                   onClick={() => handleAssetSelection(asset)}
                   className={`p-4 rounded-lg border cursor-pointer ${
-                    (tradeType === "buy" && buyInput.selectedAsset?.code === asset.code) ||
-                    (tradeType === "sell" && selectedSellAsset?.code === asset.code)
-                      ? "bg-blue-100 border-blue-500"
-                      : "border-gray-200"
+                    buyInput.selectedAssets.includes(asset) ? "bg-blue-100 border-blue-500" : "border-gray-200"
                   }`}
                 >
                   <p className="font-medium">{asset.name}</p>
@@ -162,36 +150,78 @@ const NewTrade = () => {
 
         {stage === 2 && (
           <div>
-            {tradeType === "buy" && (
-              <div>
-                <p className="text-lg font-bold">Selected: {buyInput.selectedAsset?.name}</p>
-                <input
-                  type="number"
-                  placeholder="Enter units"
-                  value={buyInput.units}
-                  onChange={(e) =>
-                    setBuyInput((prev) => ({ ...prev, units: e.target.value }))
-                  }
-                  className="w-full px-4 py-2.5 border rounded-lg mt-4"
-                />
-              </div>
-            )}
+            <table className="w-full border-collapse border border-gray-200">
+              <thead>
+                <tr>
+                  <th className="bg-gray-100">Asset</th>
+                  <th className="bg-gray-100">Units/Amount</th>
+                  <th className="bg-gray-100">Amount/Units</th>
+                </tr>
+              </thead>
+              <tbody>
+                {buyInput.selectedAssets.map((asset) => (
+                  <tr key={asset.code}>
+                    <td className="border">{asset.name}</td>
+                    <td className="border">
+                      <input
+                        type="number"
+                        value={unitsAmount[asset.code]}
+                        onChange={(e) =>
+                          setUnitsAmount((prev) => ({ ...prev, [asset.code]: e.target.value }))
+                        }
+                        className="w-full px-4 py-2.5 border rounded-lg"
+                      />
+                    </td>
+                    <td className="border">
+                      <input
+                        type="number"
+                        value={unitsAmount[asset.code] * asset.unitPrice}
+                        className="w-full px-4 py-2.5 border rounded-lg"
+                        readOnly
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
             {tradeType === "sell" && (
-              <div>
-                <p className="text-lg font-bold">Selected: {selectedSellAsset?.name}</p>
-                <input
-                  type="number"
-                  placeholder="Enter percentage to sell"
-                  onChange={(e) => {
-                    setSellInputs((prev) => ({
-                      ...prev,
-                      [selectedSellAsset.code]: e.target.value,
-                    }));
-                  }}
-                  className="w-full px-4 py-2.5 border rounded-lg mt-4"
-                />
-              </div>
+              <table className="w-full border-collapse border border-gray-200">
+                <thead>
+                  <tr>
+                    <th className="bg-gray-100">Asset</th>
+                    <th className="bg-gray-100">Units/Amount</th>
+                    <th className="bg-gray-100">Amount/Units</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sellInputs.map((input) => (
+                    <tr key={input.code}>
+                      <td className="border">{input.name}</td>
+                      <td className="border">
+                        <input
+                          type="number"
+                          value={input.value}
+                          onChange={(e) =>
+                            setSellInputs((prev) => ({ ...prev, [input.code]: e.target.value }))
+                          }
+                          className="w-full px-4 py-2.5 border rounded-lg"
+                        />
+                      </td>
+                      <td className="border">
+                        <input
+                          type="number"
+                          value={input.value * input.unitPrice}
+                          className="w-full px-4 py-2.5 border rounded-lg"
+                          readOnly
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
+
             <button
               onClick={() => navigate("/home")}
               className="w-full mt-4 py-3 bg-green-500 text-white rounded-lg"
@@ -204,6 +234,5 @@ const NewTrade = () => {
     </div>
   );
 };
-
 
 export default NewTrade;

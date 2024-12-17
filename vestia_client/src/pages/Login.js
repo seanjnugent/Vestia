@@ -1,25 +1,29 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = (e) => {
     e.preventDefault();
 
     // Fake credentials for demonstration
-    if (email === 'test' && password === 'test') {
+    if (email === "test" && password === "test") {
       // Save fake user data to localStorage
-      localStorage.setItem('token', '12345'); // Example token
-      localStorage.setItem('userId', '1'); // Example userId
+      localStorage.setItem("token", "12345"); // Example token
+      localStorage.setItem("userId", "1"); // Example userId
 
       // Redirect to the home page
-      navigate('/home');
+      navigate("/home");
     } else {
-      alert('Invalid credentials!');
+      alert("Invalid credentials!");
     }
+  };
+
+  const handleSignUp = () => {
+    navigate("/register"); // Navigate to the Register page
   };
 
   return (
@@ -52,6 +56,15 @@ const Login = () => {
             Log In
           </button>
         </form>
+        <div className="mt-4 text-center">
+          <p className="text-sm text-gray-600">Don't have an account?</p>
+          <button
+            onClick={handleSignUp}
+            className="mt-2 text-blue-500 hover:underline"
+          >
+            Sign Up
+          </button>
+        </div>
       </div>
     </div>
   );
