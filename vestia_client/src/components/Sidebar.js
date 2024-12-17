@@ -8,6 +8,7 @@ import {
   ChevronsRight, 
   User, 
   FileText, 
+  CalendarSync,
   DollarSign,
   Trello 
 } from 'lucide-react';
@@ -37,6 +38,11 @@ const Sidebar = () => {
       path: "/payments", 
       icon: DollarSign, 
       label: "Payments" 
+    },
+    { 
+      path: "/regular-payments", 
+      icon: CalendarSync, 
+      label: "Regular Payments" 
     },
     { 
       path: "/trades", 

@@ -1,238 +1,255 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Search, CheckCircle2, ArrowLeftRight, Coins, RefreshCw } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-
-const AnimatedSpinner = () => (
-  <motion.div
-    animate={{ rotate: 360 }}
-    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-  >
-    <RefreshCw className="text-blue-500 w-8 h-8" />
-  </motion.div>
-);
+import React, { useState, useMemo, useCallback } from "react";
+import { 
+  ChevronRight, 
+  ChevronLeft, 
+  Search 
+} from "lucide-react";
+import { motion } from "framer-motion";
 
 const NewTrade = () => {
+  const accounts = [
+    { id: "investment", name: "Investment Account", balance: 25000, type: "Margin", buyingPower: 50000 },
+    { id: "retirement", name: "Retirement Account", balance: 15000, type: "401k", buyingPower: 30000 }
+  ];
 
   const heldAssets = [
-    { code: "AAPL", name: "Apple Inc.", units: 10, value: 1450 },
-    { code: "MSFT", name: "Microsoft", units: 15, value: 3000 },
+    { code: "AAPL", name: "Apple Inc.", units: 10, currentPrice: 145.05, totalValue: 1450.50, performance: "+2.3%" },
+    { code: "MSFT", name: "Microsoft", units: 15, currentPrice: 200.20, totalValue: 3003.00, performance: "+1.8%" }
   ];
 
   const availableAssets = [
-    { code: "TSLA", name: "Tesla", unitPrice: 850 },
-    { code: "GOOGL", name: "Alphabet", unitPrice: 2800 },
-    { code: "AMZN", name: "Amazon", unitPrice: 3200 },
-    { code: "META", name: "Meta Platforms", unitPrice: 300 },
+    { code: "TSLA", name: "Tesla", currentPrice: 850.75, changePercent: "+4.2%", sector: "Automotive" },
+    { code: "GOOGL", name: "Alphabet", currentPrice: 2800.50, changePercent: "+3.1%", sector: "Technology" },
+    { code: "AMZN", name: "Amazon", currentPrice: 3200.25, changePercent: "+2.7%", sector: "E-commerce" },
+    { code: "META", name: "Meta Platforms", currentPrice: 300.40, changePercent: "+1.5%", sector: "Technology" }
   ];
 
-  const navigate = useNavigate();
   const [stage, setStage] = useState(0);
   const [account, setAccount] = useState("");
   const [tradeType, setTradeType] = useState("buy");
-  const [buyInput, setBuyInput] = useState({ search: "", selectedAssets: [] });
-  const [sellInputs, setSellInputs] = useState({});
-  const [selectedSellAsset, setSelectedSellAsset] = useState(null);
-  const [unitsAmount, setUnitsAmount] = useState({});
-
-  const handleNextStage = () => {
-    if (stage === 1 && tradeType === "buy" && !buyInput.selectedAssets.length) return; // Require asset for buy
-    if (stage === 1 && tradeType === "sell" && !selectedSellAsset) return; // Require asset for sell
-    setStage((prev) => prev + 1);
-  };
-
-  const handleAssetSelection = (asset) => {
-    if (tradeType === "buy") {
-      setBuyInput((prev) => ({ ...prev, selectedAssets: [...prev.selectedAssets, asset] }));
-    } else {
-      setSelectedSellAsset(asset);
-    }
-  };
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedAssets, setSelectedAssets] = useState([]);
+  const [tradeQuantities, setTradeQuantities] = useState({});
+  const [sellByPercentage, setSellByPercentage] = useState(false);
 
   const filteredAssets = useMemo(() => {
-    const search = buyInput.search.toLowerCase();
-    if (tradeType === "buy") {
-      return availableAssets.filter((asset) =>
-        asset.name.toLowerCase().includes(search) || asset.code.toLowerCase().includes(search)
-      );
-    }
-    return heldAssets.filter((asset) =>
-      asset.name.toLowerCase().includes(search) || asset.code.toLowerCase().includes(search)
+    const search = searchTerm.toLowerCase();
+    const assetList = tradeType === "buy" ? availableAssets : heldAssets;
+    return assetList.filter(asset => 
+      asset.name.toLowerCase().includes(search) || 
+      asset.code.toLowerCase().includes(search)
     );
-  }, [buyInput.search, tradeType]);
+  }, [searchTerm, tradeType]);
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-blue-100 p-6"
-      >
-        <h1 className="text-3xl font-bold text-center text-blue-800 mb-6">New Trade</h1>
-        {stage === 0 && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Select Account</label>
-            <select
-              value={account}
-              onChange={(e) => setAccount(e.target.value)}
-              className="w-full px-4 py-2.5 border rounded-lg"
-            >
-              <option value="" disabled>Choose an account</option>
-              <option value="investment">Investment Account</option>
-              <option value="savings">Savings Account</option>
-            </select>
+  const calculateTotalValue = useCallback(() => {
+    return Object.entries(tradeQuantities).reduce((total, [code, quantity]) => {
+      const asset = tradeType === "buy" 
+        ? availableAssets.find(a => a.code === code)
+        : heldAssets.find(a => a.code === code);
+      return total + (quantity * asset.currentPrice);
+    }, 0);
+  }, [tradeQuantities, tradeType]);
+
+  const renderStageContent = () => {
+    switch(stage) {
+      case 0:
+        return (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Trading Account</label>
+              <div className="space-y-3">
+                {accounts.map(acc => (
+                  <button
+                    key={acc.id}
+                    onClick={() => setAccount(acc.id)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      account === acc.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="font-bold text-lg">{acc.name}</h3>
+                        <p className="text-sm text-gray-500">{acc.type} Account</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-gray-800">${acc.balance.toLocaleString()}</p>
+                        <p className="text-xs text-gray-500">Buying Power: ${acc.buyingPower.toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
             <button
-              disabled={!account}
               onClick={() => setStage(1)}
-              className={`w-full mt-4 py-3 rounded-lg ${
-                account ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-500"
-              }`}
+              disabled={!account}
+              className={`w-full py-3 rounded-xl transition-all ${
+                account ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500'}`}
             >
-              Next
+              Continue <ChevronRight className="inline ml-2" />
             </button>
-          </div>
-        )}
+          </motion.div>
+        );
 
-        {stage === 1 && (
-          <div>
+      case 1:
+        return (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
             <div className="flex justify-between mb-4">
-              <button
-                onClick={() => setTradeType("buy")}
-                className={`w-1/2 py-2.5 rounded-lg transition-colors ${
-                  tradeType === "buy" ? "bg-blue-500 text-white" : "bg-gray-100"
-                  }`}
-              >
-                Buy
-              </button>
-              <button
-                onClick={() => setTradeType("sell")}
-                className={`w-1/2 py-2.5 rounded-lg transition-colors ${
-                  tradeType === "sell" ? "bg-blue-500 text-white" : "bg-gray-100"
-                }`}
-              >
-                Sell
-              </button>
+              {["buy", "sell"].map(type => (
+                <button
+                  key={type}
+                  onClick={() => {
+                    setTradeType(type);
+                    setSelectedAssets([]);
+                    setTradeQuantities({});
+                  }}
+                  className={`w-1/2 py-3 rounded-xl transition-all capitalize ${
+                    tradeType === type ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                >
+                  {type}
+                </button>
+              ))}
             </div>
 
-            <input
-              type="text"
-              placeholder="Search assets..."
-              value={buyInput.search}
-              onChange={(e) =>
-                setBuyInput((prev) => ({ ...prev, search: e.target.value }))
-              }
-              className="w-full px-4 py-2.5 border rounded-lg"
-            />
+            <div className="relative">
+              <input
+                type="text"
+                placeholder={`Search ${tradeType === 'buy' ? 'available' : 'held'} assets...`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-3 pl-10 border-2 rounded-xl focus:border-blue-500 transition-all"
+              />
+              <Search className="absolute left-3 top-3.5 text-gray-400" />
+            </div>
 
-            <div className="mt-4 space-y-2">
-              {filteredAssets.map((asset) => (
+            <div className="max-h-64 overflow-y-auto space-y-2">
+              {filteredAssets.map(asset => (
                 <div
                   key={asset.code}
-                  onClick={() => handleAssetSelection(asset)}
-                  className={`p-4 rounded-lg border cursor-pointer ${
-                    buyInput.selectedAssets.includes(asset) ? "bg-blue-100 border-blue-500" : "border-gray-200"
-                  }`}
+                  onClick={() => {
+                    const isSelected = selectedAssets.some(a => a.code === asset.code);
+                    setSelectedAssets(
+                      isSelected ? selectedAssets.filter(a => a.code !== asset.code) : [...selectedAssets, asset]
+                    );
+                  }}
+                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex justify-between items-center ${
+                    selectedAssets.some(a => a.code === asset.code) 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-200 hover:border-blue-300'}`}
                 >
-                  <p className="font-medium">{asset.name}</p>
-                  <p className="text-sm text-gray-500">{asset.code}</p>
+                  <div>
+                    <p className="font-bold">{asset.name}</p>
+                    <p className="text-sm text-gray-500">{asset.code}</p>
+                    {tradeType === "sell" && <p className="text-xs text-gray-500">Held: {asset.units} units</p>}
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold">${asset.currentPrice.toLocaleString()}</p>
+                    {tradeType === "buy" && <p className={`text-sm ${asset.changePercent.startsWith('+') ? 'text-green-500' : 'text-red-500'}`}>{asset.changePercent}</p>}
+                  </div>
                 </div>
               ))}
             </div>
 
-            <button
-              onClick={handleNextStage}
-              className="w-full mt-4 py-3 bg-blue-500 text-white rounded-lg"
-            >
-              Next
-            </button>
-          </div>
-        )}
+            <div className="flex justify-between">
+              <button
+                onClick={() => setStage(0)}
+                className="text-gray-500 hover:text-gray-700 flex items-center"
+              >
+                <ChevronLeft className="mr-2" /> Back
+              </button>
+              <button
+                onClick={() => setStage(2)}
+                disabled={selectedAssets.length === 0}
+                className={`py-3 px-6 rounded-xl transition-all ${
+                  selectedAssets.length > 0 ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500'}`}
+              >
+                Next <ChevronRight className="inline ml-2" />
+              </button>
+            </div>
+          </motion.div>
+        );
 
-        {stage === 2 && (
-          <div>
-            <table className="w-full border-collapse border border-gray-200">
-              <thead>
-                <tr>
-                  <th className="bg-gray-100">Asset</th>
-                  <th className="bg-gray-100">Units/Amount</th>
-                  <th className="bg-gray-100">Amount/Units</th>
-                </tr>
-              </thead>
-              <tbody>
-                {buyInput.selectedAssets.map((asset) => (
-                  <tr key={asset.code}>
-                    <td className="border">{asset.name}</td>
-                    <td className="border">
-                      <input
-                        type="number"
-                        value={unitsAmount[asset.code]}
-                        onChange={(e) =>
-                          setUnitsAmount((prev) => ({ ...prev, [asset.code]: e.target.value }))
-                        }
-                        className="w-full px-4 py-2.5 border rounded-lg"
-                      />
-                    </td>
-                    <td className="border">
-                      <input
-                        type="number"
-                        value={unitsAmount[asset.code] * asset.unitPrice}
-                        className="w-full px-4 py-2.5 border rounded-lg"
-                        readOnly
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      case 2:
+        return (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+            <h2 className="text-2xl font-bold text-center mb-4">{tradeType === 'buy' ? 'Buy' : 'Sell'} Order Details</h2>
 
-            {tradeType === "sell" && (
-              <table className="w-full border-collapse border border-gray-200">
-                <thead>
-                  <tr>
-                    <th className="bg-gray-100">Asset</th>
-                    <th className="bg-gray-100">Units/Amount</th>
-                    <th className="bg-gray-100">Amount/Units</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sellInputs.map((input) => (
-                    <tr key={input.code}>
-                      <td className="border">{input.name}</td>
-                      <td className="border">
-                        <input
-                          type="number"
-                          value={input.value}
-                          onChange={(e) =>
-                            setSellInputs((prev) => ({ ...prev, [input.code]: e.target.value }))
-                          }
-                          className="w-full px-4 py-2.5 border rounded-lg"
-                        />
-                      </td>
-                      <td className="border">
-                        <input
-                          type="number"
-                          value={input.value * input.unitPrice}
-                          className="w-full px-4 py-2.5 border rounded-lg"
-                          readOnly
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+            <div className="flex justify-end space-x-4 mb-4">
+              {tradeType === "sell" && (
+                <>
+                  <button
+                    onClick={() => setSellByPercentage(false)}
+                    className={`py-2 px-4 rounded-xl transition-all ${
+                      !sellByPercentage ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}
+                  >
+                    Units
+                  </button>
+                  <button
+                    onClick={() => setSellByPercentage(true)}
+                    className={`py-2 px-4 rounded-xl transition-all ${
+                      sellByPercentage ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`} > Percentage </button> </> )} </div>
 
-            <button
-              onClick={() => navigate("/home")}
-              className="w-full mt-4 py-3 bg-green-500 text-white rounded-lg"
-            >
-              Confirm Trade
-            </button>
-          </div>
-        )}
-      </motion.div>
+
+<div className="space-y-4">
+{selectedAssets.map(asset => (
+  <div key={asset.code} className="p-4 rounded-xl border-2">
+    <h3 className="font-bold text-lg">{asset.name}</h3>
+    <p className="text-sm text-gray-500 mb-2">{asset.code}</p>
+    {tradeType === "sell" && (
+      <p className="text-xs text-gray-500 mb-4">
+        Held: {asset.units} units (${(asset.units * asset.currentPrice).toFixed(2)})
+      </p>
+    )}
+    <div className="flex items-center space-x-4">
+      <input
+        type="number"
+        min="0"
+        max={tradeType === "sell" ? (sellByPercentage ? 100 : asset.units) : undefined}
+        step={sellByPercentage ? 1 : 0.01}
+        placeholder={sellByPercentage ? "Enter %" : "Enter units"}
+        value={tradeQuantities[asset.code] || ""}
+        onChange={(e) =>
+          setTradeQuantities({
+            ...tradeQuantities,
+            [asset.code]: e.target.value,
+          })
+        }
+        className="w-full px-4 py-2 border rounded-xl focus:border-blue-500"
+      />
+      <span className="text-sm text-gray-500">
+        {sellByPercentage ? "%" : "units"}
+      </span>
     </div>
-  );
+  </div>
+))}
+</div>
+
+<div className="flex justify-between mt-4">
+<button
+  onClick={() => setStage(1)}
+  className="text-gray-500 hover:text-gray-700 flex items-center"
+>
+  <ChevronLeft className="mr-2" /> Back
+</button>
+<button
+  onClick={() => alert(`Trade submitted for $${calculateTotalValue().toFixed(2)}`)}
+  disabled={!Object.values(tradeQuantities).some((q) => q > 0)}
+  className={`py-3 px-6 rounded-xl transition-all ${
+    Object.values(tradeQuantities).some((q) => q > 0)
+      ? "bg-blue-500 text-white hover:bg-blue-600"
+      : "bg-gray-300 text-gray-500"
+  }`}
+>
+  Confirm
+</button>
+</div>
+</motion.div>
+);
+
+default:
+return null;
+}
 };
+
+return ( <div className="max-w-lg mx-auto p-6"> <h1 className="text-3xl font-bold text-center mb-6">New Trade</h1> {renderStageContent()} </div> ); };
 
 export default NewTrade;

@@ -11,9 +11,13 @@ import NewTrade from './pages/NewTrade';
 import Profile from './pages/Profile';
 import Payments from './pages/Payments';
 import NewAccount from './pages/NewAccount';
-import Research from './pages/StockResearch';
+import Research from './pages/Research';
+import ResearchCrypto from './pages/ResearchCrypto';
+import ResearchFunds from './pages/ResearchFunds';
+import ResearchStocks from './pages/ResearchStocks';
 import Documents from './pages/Documents';
 import Register from './components/Register';
+import RegularPayments from './pages/RegularPayments';
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('token'); // Check for token
@@ -44,8 +48,12 @@ function App() {
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/payments" element={<Payments />} />
                     <Route path="/research" element={<Research />} />
+                    <Route path="/research/stocks" element={<ResearchStocks />} />
+                    <Route path="/research/crypto" element={<ResearchCrypto />} />
+                    <Route path="/research/funds" element={<ResearchFunds />} />
                     <Route path="/documents" element={<Documents />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/regular-payments" element={<RegularPayments />} />
 
                   </Routes>
                 </main>
