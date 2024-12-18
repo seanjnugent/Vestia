@@ -1,148 +1,102 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React from 'react';
+import { NavLink } from 'react-router-dom';
 import { 
   Home, 
+  Wallet, 
+  TrendingUp, 
   CreditCard, 
-  BarChart2, 
-  ChevronsLeft, 
-  ChevronsRight, 
+  LogOut, 
   User, 
+  BarChart2,
   FileText, 
-  CalendarSync,
-  DollarSign,
-  Trello 
+  CalendarSync
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const Sidebar = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const location = useLocation();
-
-  const menuItems = [
-    { 
-      path: "/home", 
-      icon: Home, 
-      label: "Home" 
-    },
-    { 
-      path: "/accounts", 
-      icon: CreditCard, 
-      label: "Accounts" 
-    },
-    { 
-      path: "/research", 
-      icon: BarChart2, 
-      label: "Research" 
-    },
-    { 
-      path: "/payments", 
-      icon: DollarSign, 
-      label: "Payments" 
-    },
-    { 
-      path: "/regular-payments", 
-      icon: CalendarSync, 
-      label: "Regular Payments" 
-    },
-    { 
-      path: "/trades", 
-      icon: Trello, 
-      label: "Trades" 
-    },
-    { 
-      path: "/documents", 
-      icon: FileText, 
-      label: "Documents" 
-    },
-    { 
-      path: "/profile", 
-      icon: User, 
-      label: "Profile" 
-    }
-  ];
-
   return (
-    <motion.div 
-      initial={{ width: 250 }}
-      animate={{ 
-        width: isCollapsed ? 80 : 250,
-        transition: { duration: 0.3 }
-      }}
-      className="bg-white border-r border-gray-100 h-screen flex flex-col shadow-lg"
-    >
-      <div className="p-4 flex justify-between items-center">
-        <AnimatePresence>
-          {!isCollapsed && (
-            <motion.h2 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="text-2xl font-bold text-blue-600"
+    <div className="h-screen w-64 bg-gradient-to-br from-blue-600 to-blue-800 text-white flex flex-col p-4 shadow-lg">
+      <h2 className="text-2xl font-bold mb-6">My App</h2>
+      <nav className="flex-1">
+        <ul className="space-y-4">
+          <li>
+            <NavLink 
+              to="/home" 
+              className={({ isActive }) => 
+                `flex items-center gap-3 p-3 rounded-lg transition-all duration-300 ${
+                  isActive ? 'bg-blue-700' : 'hover:bg-blue-500'
+                }`
+              }
             >
-              Vestia
-            </motion.h2>
-          )}
-        </AnimatePresence>
-        
-        <button 
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="text-gray-500 hover:text-blue-600 transition-colors"
-        >
-          {isCollapsed ? <ChevronsRight /> : <ChevronsLeft />}
-        </button>
-      </div>
-
-      <nav className="flex-grow overflow-y-auto px-4 pt-4 space-y-2">
-        {menuItems.map((item) => (
-          <Link 
-            key={item.path}
-            to={item.path}
-            className={`
-              flex items-center p-3 rounded-lg transition-all duration-300 
-              ${location.pathname === item.path 
-                ? 'bg-blue-50 text-blue-600' 
-                : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600'}
-            `}
-          >
-            <item.icon 
-              className={`mr-3 ${
-                location.pathname === item.path 
-                  ? 'text-blue-600' 
-                  : 'text-gray-400 group-hover:text-blue-600'
-              }`} 
-            />
-            <AnimatePresence>
-              {!isCollapsed && (
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="font-medium"
-                >
-                  {item.label}
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </Link>
-        ))}
+              <Home /> Dashboard
+            </NavLink>
+          </li>
+          <li>
+            <NavLink 
+              to="/accounts" 
+              className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-500 transition-all duration-300"
+            >
+              <Wallet /> Accounts
+            </NavLink>
+          </li>
+          <li>
+            <NavLink 
+              to="/research" 
+              className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-500 transition-all duration-300"
+            >
+              <BarChart2 /> Research
+            </NavLink>
+          </li>
+          <li>
+            <NavLink 
+              to="/trades" 
+              className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-500 transition-all duration-300"
+            >
+              <TrendingUp /> Trades
+            </NavLink>
+          </li>
+          <li>
+            <NavLink 
+              to="/payments" 
+              className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-500 transition-all duration-300"
+            >
+              <CreditCard /> Payments
+            </NavLink>
+          </li>
+          <li>
+            <NavLink 
+              to="/regular-payments" 
+              className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-500 transition-all duration-300"
+            >
+              <CalendarSync /> Regular Payments
+            </NavLink>
+          </li>
+          <li>
+            <NavLink 
+              to="/documents" 
+              className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-500 transition-all duration-300"
+            >
+              <FileText /> Documents
+            </NavLink>
+          </li>
+        </ul>
       </nav>
-
-      <div className="p-4 border-t border-gray-100">
-        <AnimatePresence>
-          {!isCollapsed && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="text-xs text-gray-400 text-center"
-            >
-              © 2024 Vestia
-            </motion.div>
-          )}
-        </AnimatePresence>
+      <div>
+        <NavLink 
+          to="/profile" 
+          className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-500 transition-all duration-300"
+        >
+          <User /> Profile
+        </NavLink>
+        <NavLink 
+          to="/logout" 
+          className="flex items-center gap-3 p-3 mt-4 rounded-lg hover:bg-red-500 transition-all duration-300"
+        >
+          <LogOut /> Logout
+        </NavLink>
       </div>
-    </motion.div>
+    </div>
   );
 };
+
 
 export default Sidebar;
