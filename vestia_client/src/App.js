@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Sidebar from './components/Sidebar';
+import Sidebar from './components/TopNav';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import Accounts from './pages/Accounts';
@@ -28,15 +28,21 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Public Login Route */}
         <Route path="/" element={<Login />} />
 
+        {/* Protected Routes */}
         <Route
           path="/*"
           element={
             <ProtectedRoute>
-              <div className="flex h-screen bg-gray-100">
+              {/* Top Navigation Layout */}
+              <div className="flex flex-col h-screen bg-gray-100">
+                {/* Sidebar becomes the Top Nav */}
                 <Sidebar />
-                <main className="flex-1 p-6">
+
+                {/* Main Content Section */}
+                <main className="flex-1 p-6 overflow-auto">
                   <Routes>
                     <Route path="/home" element={<Home />} />
                     <Route path="/accounts" element={<Accounts />} />
@@ -54,7 +60,6 @@ function App() {
                     <Route path="/documents" element={<Documents />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/regular-payments" element={<RegularPayments />} />
-
                   </Routes>
                 </main>
               </div>
@@ -67,3 +72,4 @@ function App() {
 }
 
 export default App;
+
