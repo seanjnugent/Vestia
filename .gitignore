@@ -23,5 +23,7 @@
 hs_err_pid*
 replay_pid*
 
-vestia_client/node_modules/ 
+vestia_client/build/ 
+node_modules/ 
+
 .env

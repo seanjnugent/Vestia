@@ -43,8 +43,11 @@ const Login = () => {
       {/* Form Container */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96">
         <div className="bg-white p-8 shadow-lg rounded-lg">
+        <div className="flex items-center justify-center">  {/* Center items horizontally and vertically */}
+        <img src="/vestia-client.svg" alt="Vestia Logo" className="h-20 w-20" /> {/* Adjust size of logo */}
+</div>
           <h2 className="text-3xl font-semibold text-gray-800 text-center">
-            Welcome Back
+          Welcome Back
           </h2>
           <p className="text-gray-500 text-center mt-2">
             Log in to your account

@@ -1,0 +1,22 @@
+{
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3"
+  },
+  "scripts": {
+    "client": "npm start --prefix vestia_client",
+    "admin": "npm start --prefix vestia_admin",
+    "server": "npm start --prefix vestia_server",
+    "dev": "concurrently \"npm run client\" \"npm run admin\" \"npm run server\""
+  },
+  "private": true,
+  "workspaces": [
+    "vestia_client",
+    "vestia_admin",
+    "vestia_server"
+  ],
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}

@@ -1,218 +1,236 @@
-import React, { useMemo, useState } from 'react';
-import { 
-  ArrowUp, 
-  ArrowDown, 
-  PlusCircle, 
-  RefreshCw, 
-  Filter, 
-  ChevronDown 
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { Plus, ChevronRight, Calendar, Clock } from "react-feather";
+import { format, parseISO } from "date-fns";
 
-// Enhanced mock Payment data with more dynamic information
-const payments = [
-  {
-    id: 1,
-    date: '2024-12-12',
-    type: 'Deposit',
-    account: 'Investment Account',
-    status: 'Completed',
-    sum: '£1,500',
-    color: 'bg-green-100',
-    icon: '📈'
-  },
-  {
-    id: 2,
-    date: '2024-12-11',
-    type: 'Withdrawal',
-    account: 'Savings Account',
-    status: 'Pending',
-    sum: '£800',
-    color: 'bg-yellow-100',
-    icon: '⏳'
-  },
-  {
-    id: 3,
-    date: '2024-12-10',
-    type: 'Deposit',
-    account: 'Investment Account',
-    status: 'Completed',
-    sum: '£2,200',
-    color: 'bg-blue-100',
-    icon: '📊'
-  },
-];
+const Payments = () => {
+  const [oneOffPayments, setOneOffPayments] = useState([
+    { id: 1, date: "2024-12-15", type: "Deposit", amount: "$500", account: "Savings" },
+    { id: 2, date: "2024-12-12", type: "Withdrawal", amount: "$300", account: "Personal" },
+    { id: 3, date: "2024-12-10", type: "Deposit", amount: "$700", account: "Business" },
+    // Add more items as needed
+  ]);
 
-const StatusBadge = ({ status }) => {
-  const statusStyles = {
-    'Completed': 'bg-green-100 text-green-800',
-    'Pending': 'bg-yellow-100 text-yellow-800',
-    'Cancelled': 'bg-red-100 text-red-800'
-  };
+  const [depositData, setDepositData] = useState([
+    {
+      id: 1,
+      frequency: "Monthly",
+      nextDate: "2024-12-25",
+      amount: "$1000",
+      account: "Personal Account",
+    },
+  ]);
 
-  return (
-    <span className={`
-      px-2 py-1 rounded-full text-xs font-medium 
-      ${statusStyles[status] || 'bg-gray-100 text-gray-800'}
-    `}>
-      {status}
-    </span>
-  );
-};
+  const [withdrawalData, setWithdrawalData] = useState([
+    {
+      id: 1,
+      frequency: "Monthly",
+      nextDate: "2024-12-25",
+      percentage: "5%",
+    },
+  ]);
 
-const PaymentsTable = () => {
-  const [sortConfig, setSortConfig] = useState({ 
-    key: 'date', 
-    direction: 'desc' 
-  });
-  const [filter, setFilter] = useState('');
-  const navigate = useNavigate();
-
-  const sortedAndFilteredpayments = useMemo(() => {
-    let result = [...payments];
-
-    // Filter
-    if (filter) {
-      result = result.filter(Payment => 
-        Object.values(Payment).some(value => 
-          value.toString().toLowerCase().includes(filter.toLowerCase())
-        )
-      );
+  const formatDate = (dateString) => {
+    try {
+      const parsedDate = parseISO(dateString);
+      return format(parsedDate, "dd MMM yyyy");
+    } catch (error) {
+      console.error("Error parsing date:", error);
+      return "Invalid Date";
     }
-
-    // Sort
-    return result.sort((a, b) => {
-      if (a[sortConfig.key] < b[sortConfig.key]) {
-        return sortConfig.direction === 'asc' ? -1 : 1;
-      }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
-        return sortConfig.direction === 'asc' ? 1 : -1;
-      }
-      return 0;
-    });
-  }, [sortConfig, filter]);
-
-  const handleSort = (key) => {
-    setSortConfig(prev => ({
-      key,
-      direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc'
-    }));
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-8">
-      <div className="container mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
-            Payment History
-          </h1>
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <input 
-                type="text" 
-                placeholder="Search payments..." 
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="
-                  pl-10 pr-4 py-2 rounded-xl border 
-                  focus:ring-2 focus:ring-indigo-300 
-                  transition-all duration-300
-                "
-              />
-              <Filter className="absolute left-3 top-3 text-gray-400" />
-            </div>
-            <button
-              onClick={() => navigate("/manage-cash")}
-              className="
-                flex items-center gap-2 px-4 py-2 
-                bg-gradient-to-r from-indigo-600 to-purple-600 
-                text-white rounded-xl shadow-lg 
-                hover:scale-105 transition-all duration-300
-              "
-            >
-              <PlusCircle size={18} /> New Payment
-            </button>
-          </div>
-        </div>
+    <div className="bg-gray-100 min-h-screen p-8">
+      <div className="max-w-7xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="px-8 py-10">
+          <h1 className="text-3xl font-bold text-gray-900 mb-6 tracking-tight">Payments</h1>
 
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-100 border-b">
-              <tr>
-                {[
-                  'Date', 'Type', 'Account', 'Status', 'Sum'
-                ].map((header) => (
-                  <th 
-                    key={header}
-                    onClick={() => handleSort(header.toLowerCase().replace(/\s/g, ''))}
-                    className="
-                      px-6 py-4 text-left text-xs font-medium 
-                      text-gray-600 uppercase tracking-wider
-                      cursor-pointer hover:bg-gray-200
-                      transition-all duration-300
-                    "
-                  >
-                    <div className="flex items-center gap-2">
-                      {header}
-                      {sortConfig.key === header.toLowerCase().replace(/\s/g, '') && (
-                        sortConfig.direction === 'asc' 
-                          ? <ArrowUp size={16} /> 
-                          : <ArrowDown size={16} />
-                      )}
-                    </div>
+          {/* One-Off Payments Section */}
+          <section className="mb-12">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 tracking-tight">
+                Payment History
+              </h2>
+              <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition duration-200">
+                <Plus size={18} /> <span>New One-Off Payment</span>
+              </button>
+            </div>
+
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Date
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {sortedAndFilteredpayments.map((Payment) => (
-                <tr 
-                  key={Payment.id} 
-                  className="
-                    hover:bg-indigo-50 transition-all 
-                    duration-300 border-b last:border-b-0
-                  "
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <span className="mr-3">{Payment.icon}</span>
-                      {Payment.date}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`
-                      px-3 py-1 rounded-full text-xs font-medium
-                      ${Payment.type === 'Withdrawal' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-blue-100 text-blue-800'}
-                    `}>
-                      {Payment.type}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">{Payment.account}</td>
-                  <td className="px-6 py-4">
-                    <StatusBadge status={Payment.status} />
-                  </td>
-                  <td className="px-6 py-4 font-semibold">{Payment.sum}</td>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Type
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Amount
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Account
+                  </th>
+                  <th className="px-6 py-3"></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {sortedAndFilteredpayments.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              No payments found 🕹️
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {oneOffPayments.slice(0, 5).map((payment) => (
+                  <tr key={payment.id}>
+                    <td className="px-6 py-4 text-sm text-gray-900 flex items-center">
+                      <Calendar size={16} className="mr-2 text-gray-400" />
+                      {formatDate(payment.date)}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{payment.type}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{payment.amount}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{payment.account}</td>
+                    <td className="px-6 py-4 text-right text-sm font-medium">
+                      <Link
+                        to={`/payment-details/${payment.id}`}
+                        className="text-blue-600 hover:text-blue-800 flex items-center"
+                      >
+                        <span>View Details</span>
+                        <ChevronRight size={16} />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="text-right mt-4">
+              <Link
+                to="/all-one-off-payments"
+                className="text-blue-600 hover:underline text-sm"
+              >
+                See full payment history
+              </Link>
             </div>
-          )}
-        </div>
+          </section>
 
-        <div className="mt-6 text-center text-gray-500 flex justify-center items-center gap-2">
-          <RefreshCw size={16} className="animate-spin" />
-          Last updated: Just now
+           {/* Regular Payments Section */}
+          <section className="mb-12">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 tracking-tight">
+                Regular Payments
+              </h2>
+              <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition duration-200">
+                <Plus size={18} /> <span>New Regular Payment</span>
+              </button>
+            </div>
+
+            {/* Deposits Section */}
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Regular Deposits
+            </h3>
+            {depositData.length === 0 ? (
+              <p className="text-gray-500">No deposits set up yet.</p>
+            ) : (
+              <table className="min-w-full divide-y divide-gray-200 mb-8">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Frequency
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Next Payment
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Account
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Amount
+                    </th>
+                    <th className="px-6 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {depositData.map((deposit) => (
+                    <tr key={deposit.id}>
+                      <td className="px-6 py-4 text-sm text-gray-900 flex items-center">
+                        <Clock size={16} className="mr-2 text-gray-400" />
+                        {deposit.frequency}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900 flex items-center">
+                        <Calendar size={16} className="mr-2 text-gray-400" />
+                        {formatDate(deposit.nextDate)}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {deposit.account}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {deposit.amount}
+                      </td>
+                      <td className="px-6 py-4 text-right text-sm font-medium">
+                        <Link
+                          to={`/payment-details/${deposit.id}`}
+                          className="text-blue-600 hover:text-blue-800 flex items-center"
+                        >
+                          <span>View Details</span>
+                          <ChevronRight size={16} />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+
+            {/* Withdrawals Section */}
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              Regular Withdrawals
+            </h3>
+            {withdrawalData.length === 0 ? (
+              <p className="text-gray-500">No withdrawals set up yet.</p>
+            ) : (
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Frequency
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Next Withdrawal
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                      Percentage
+                    </th>
+                    <th className="px-6 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {withdrawalData.map((withdrawal) => (
+                    <tr key={withdrawal.id}>
+                      <td className="px-6 py-4 text-sm text-gray-900 flex items-center">
+                        <Clock size={16} className="mr-2 text-gray-400" />
+                        {withdrawal.frequency}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900 flex items-center">
+                        <Calendar size={16} className="mr-2 text-gray-400" />
+                        {formatDate(withdrawal.nextDate)}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {withdrawal.percentage}
+                      </td>
+                      <td className="px-6 py-4 text-right text-sm font-medium">
+                        <Link
+                          to={`/withdrawal-details/${withdrawal.id}`}
+                          className="text-blue-600 hover:text-blue-800 flex items-center"
+                        >
+                          <span>View Details</span>
+                          <ChevronRight size={16} />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </section>
         </div>
       </div>
     </div>
   );
 };
 
-export default PaymentsTable;
+export default Payments;

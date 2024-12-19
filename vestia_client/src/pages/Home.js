@@ -140,7 +140,7 @@ const Home = () => {
               icon={CreditCard}
               title="Manage Cash"
               description="Deposit or withdraw funds"
-              onClick={() => navigate("/manage-cash")}
+              onClick={() => navigate("/new-payment")}
             />
           </motion.div>
         </div>
