@@ -1,43 +1,14 @@
 import React, { useState, useCallback, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
+import ProgressTracker from "../components/ProgressTracker";
 
-const ProgressTracker = ({ currentStep }) => {
-  const steps = [
+const steps = [
     "Transaction Type",
     "Payment Method",
     "Amount",
     "Source",
     "Review"
-  ];
-
-  const numSteps = steps.length;
-
-  if (numSteps === 0) {
-    return null;
-  }
-
-  const currentStepBounded = Math.max(1, Math.min(currentStep, numSteps));
-  const progress = numSteps > 1 ? ((currentStepBounded - 1) / (numSteps - 1)) * 100 : currentStepBounded === 1 ? 100 : 0;
-
-  return (
-    <div className="relative mb-8 px-4">
-      <div className="w-full h-2 bg-gray-300 rounded-full">
-        <div
-          className="h-2 bg-gradient-to-r from-[#ff6b6b] via-[#ffa500] to-[#ffff00] rounded-full transition-all duration-300"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-
-      <div className="flex items-center justify-between absolute top-0 left-0 right-0 -mt-6 w-full">
-        {steps.map((step, index) => (
-          <div key={index} className="flex flex-col items-center">
-
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
+];
 
 
 
@@ -95,7 +66,7 @@ const ManageCash = () => {
         <div className="space-y-6">
           <h2 className="text-2xl font-semibold text-gray-900">Select Transaction Type</h2>
           <div className="grid grid-cols-2 gap-6">
-            {["deposit", "withdraw"].map((type) => (
+            {["Deposit", "Withdrawal"].map((type) => (
               <button
                 key={type}
                 onClick={() => {
@@ -108,7 +79,7 @@ const ManageCash = () => {
                     ? 'border-blue-500 bg-blue-50 text-blue-700 ring-2 ring-blue-200' 
                     : 'border-gray-300 text-gray-700 hover:border-gray-400'}`}
               >
-                {type === "deposit" ? "Deposit Funds" : "Withdraw Funds"}
+                {type === "Deposit" ? "Deposit Funds" : "Withdraw Funds"}
               </button>
             ))}
           </div>
@@ -270,7 +241,7 @@ const ManageCash = () => {
       <h1 className="text-3xl font-bold text-center text-gray-900 mb-8">
         Manage Your Cash
       </h1>
-      <ProgressTracker currentStep={step} totalSteps={steps.length} />
+      <ProgressTracker currentStep={step} steps={steps} totalSteps={steps.length} />
       {renderStepContent()}
     </div>
   );

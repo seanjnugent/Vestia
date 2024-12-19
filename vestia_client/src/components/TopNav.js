@@ -14,14 +14,16 @@ import {
 
 const TopNav = () => {
   return (
-    <div className="w-full bg-gradient-to-r from-[#ff6b6b] via-[#ffa500] to-[#ffff00] text-white shadow-md py-4"> {/* Gradient background and increased padding */}
-      <div className="container mx-auto flex items-center justify-between px-4"> {/* Added container for centering */}
+    <div className="w-full bg-gradient-to-r from-[#ff6b6b] via-[#ffa500] to-[#ffff00] text-white shadow-md py-6"> {/* Gradient background and increased padding */}
+      <div className="container mx-auto flex items-center justify-between px-6"> {/* Added container for centering */}
         {/* Brand Name */}
-        <h2 className="text-xl font-bold">My App</h2> {/* Increased font size */}
-
+        <NavLink to="/home" >
+        <h2 className="text-xl font-bold">Vestia</h2>
+         {/* Increased font size */}
+        </NavLink>
         {/* Navigation */}
         <nav>
-          <ul className="flex items-center space-x-6 text-base"> {/* Increased spacing and font size */}
+          <ul className="flex items-center space-x-3 text-base"> {/* Increased spacing and font size */}
             <li>
               <NavLink 
                 to="/home" 
@@ -41,7 +43,6 @@ const TopNav = () => {
                 to="/accounts" 
                 className="px-3 py-1 rounded hover:bg-white/20 transition"
               >
-                <Wallet size={18} className="inline mr-1 -mt-1" />
                 <span>Accounts</span>
               </NavLink>
             </li>
@@ -50,7 +51,6 @@ const TopNav = () => {
                 to="/research" 
                 className="px-3 py-1 rounded hover:bg-white/20 transition"
               >
-                <BarChart2 size={18} className="inline mr-1 -mt-1" /> 
                 <span>Research</span>
               </NavLink>
             </li>
@@ -59,7 +59,6 @@ const TopNav = () => {
                 to="/trades" 
                 className="px-3 py-1 rounded hover:bg-white/20 transition"
               >
-                <TrendingUp size={18} className="inline mr-1 -mt-1" />
                 <span>Trades</span>
               </NavLink>
             </li>
@@ -68,7 +67,6 @@ const TopNav = () => {
                 to="/payments" 
                 className="px-3 py-1 rounded hover:bg-white/20 transition"
               >
-                <CreditCard size={18} className="inline mr-1 -mt-1" />
                 <span>Payments</span>
               </NavLink>
             </li>
@@ -77,8 +75,7 @@ const TopNav = () => {
                 to="/regular-payments" 
                 className="px-3 py-1 rounded hover:bg-white/20 transition"
               >
-                <CalendarSync size={18} className="inline mr-1 -mt-1" />
-                <span>Regular</span>
+                <span>Regular Payments</span>
               </NavLink>
             </li>
             <li>
@@ -86,8 +83,7 @@ const TopNav = () => {
                 to="/documents" 
                 className="px-3 py-1 rounded hover:bg-white/20 transition"
               >
-                <FileText size={18} className="inline mr-1 -mt-1" />
-                <span>Docs</span>
+                <span>Documents</span>
               </NavLink>
             </li>
           </ul>
@@ -102,13 +98,18 @@ const TopNav = () => {
             <User size={18} className="inline mr-1 -mt-1" />
             <span>Profile</span>
           </NavLink>
-          <NavLink 
-            to="/logout" 
-            className="px-3 py-1 rounded hover:bg-white/20 transition" // Removed red hover
-          >
-            <LogOut size={18} className="inline mr-1 -mt-1" />
-            <span>Logout</span>
-          </NavLink>
+          <button // Changed to a button
+                        onClick={() => {
+                            // Handle logout logic here, e.g., clear local storage, redirect
+                            localStorage.removeItem('token'); // Example
+                            localStorage.removeItem('userId'); // Example
+                            window.location.href = "/login"; // Example redirect
+                        }}
+                        className="px-3 py-1 rounded transition bg-[#ffa500] hover:bg-[#e05252] text-white" // Button styles
+                    >
+                        <LogOut size={18} className="inline mr-1 -mt-1" />
+                        <span>Logout</span>
+                    </button>
         </div>
       </div>
     </div>

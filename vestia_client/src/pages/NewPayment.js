@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import BuyTrade from "../components/trades/BuyTrade";
-import SellTrade from "../components/trades/SellTrade";
+import BuyTrade from "../components/BuyTrade";
+import SellTrade from "../components/SellTrade";
 import ProgressTracker from "../components/ProgressTracker";
 
 const NewTrade = () => {
