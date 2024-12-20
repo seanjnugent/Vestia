@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus, ChevronRight, Calendar, Clock } from "react-feather";
 import { format, parseISO } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 const Payments = () => {
   const [oneOffPayments, setOneOffPayments] = useState([
@@ -10,6 +11,9 @@ const Payments = () => {
     { id: 3, date: "2024-12-10", type: "Deposit", amount: "$700", account: "Business" },
     // Add more items as needed
   ]);
+
+  const navigate = useNavigate();
+
 
   const [depositData, setDepositData] = useState([
     {
@@ -114,8 +118,10 @@ const Payments = () => {
               <h2 className="text-xl font-semibold text-gray-900 tracking-tight">
                 Regular Payments
               </h2>
-              <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition duration-200">
+              <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition duration-200"
+                              onClick={() => navigate("/new-regular-payment")}>
                 <Plus size={18} /> <span>New Regular Payment</span>
+
               </button>
             </div>
 
