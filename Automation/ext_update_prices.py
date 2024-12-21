@@ -31,15 +31,15 @@ for symbol in symbols:
     try:
         # Download stock data for each symbol
         df = yf.download(tickers=symbol, period="5d", interval="1d")
-        
+
         # If no data is returned, skip this symbol
         if df.empty:
             print(f"No data for symbol: {symbol}")
             continue
 
         # Keep only relevant columns, rename, and add Symbol column
-        df = df[['Adj Close', 'Close', 'High', 'Low', 'Open', 'Volume']].copy()
-        df.columns = ['Adj_Close', 'Close', 'High', 'Low', 'Open', 'Volume']
+        df = df[['Close', 'High', 'Low', 'Open', 'Volume']].copy()
+        df.columns = ['Close', 'High', 'Low', 'Open', 'Volume']
         df['Symbol'] = symbol
         df.reset_index(inplace=True)  # Flatten the Date index
 
@@ -62,7 +62,6 @@ if all_data:
             CREATE TEMPORARY TABLE IF NOT EXISTS prctemp (
                 Date DATE,
                 Symbol VARCHAR,
-                Adj_Close NUMERIC,
                 Close NUMERIC,
                 High NUMERIC,
                 Low NUMERIC,

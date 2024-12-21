@@ -5,10 +5,9 @@ const AnimatedProgressBar = ({ currentStep }) => {
   const progress = (currentStep / 5) * 100;
 
   return (
-    <div className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 h-1.5 rounded-full overflow-hidden">
+    <div className="h-2 rounded-full overflow-hidden bg-gradient-to-r from-indigo-500 to-purple-600">
       <div
-        className="bg-gradient-to-r from-teal-500 to-emerald-500 h-full transition-all duration-300 ease-in-out"
-        style={{ width: `${progress}%` }}
+        className={`h-full bg-gradient-to-r from-teal-400 to-emerald-400 transition-all duration-300 ease-in-out w-${progress}%`}
       />
     </div>
   );
@@ -16,21 +15,15 @@ const AnimatedProgressBar = ({ currentStep }) => {
 
 const StepButton = ({ children, onClick, disabled = false, variant = 'primary' }) => {
   const variantStyles = {
-    primary: 'bg-indigo-600 hover:bg-indigo-700 text-white',
-    secondary: 'bg-gray-200 hover:bg-gray-300 text-gray-800',
-    accent: 'bg-green-500 hover:bg-green-600 text-white',
+    primary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 ease-in-out',
+    secondary: 'text-gray-600 hover:text-gray-700 focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 py-2 px-4 rounded-full flex items-center gap-2 transition-all duration-300 ease-in-out',
   };
 
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`
-        flex items-center justify-center gap-2 py-3 px-6 rounded-xl 
-        transition-all duration-300 ease-in-out
-        disabled:opacity-50 disabled:cursor-not-allowed
-        ${variantStyles[variant]}
-      `}
+      className={`${variantStyles[variant]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       {children}
     </button>
@@ -73,11 +66,18 @@ const NewAccount = () => {
     if (step > 1) setStep((prev) => prev - 1);
   }, [step]);
 
+  const isStepComplete = () => {
+    if (step === 2) {
+      return account.name.trim().length > 0; // Make sure account name is not empty
+    }
+    return true; // All other steps are valid by default
+  };
+
   const renderStepContent = () => {
     const stepComponents = {
       1: (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-800">Select Account Type</h2>
+          <h2 className="text-2xl font-semibold text-gray-800">Select Account Type</h2>
           <div className="grid grid-cols-2 gap-4">
             {['Managed Portfolio', 'General Investment'].map((type) => (
               <button
@@ -87,11 +87,9 @@ const NewAccount = () => {
                   handleNext();
                 }}
                 className={`
-                  py-4 rounded-xl border-2 transition-all duration-300
-                  ${account.type === type
-                    ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                    : 'border-gray-300 text-gray-600 hover:border-gray-500'}
-                `}
+                  py-3 px-6 rounded-full bg-white shadow-md border border-gray-200 hover:shadow-lg hover:border-indigo-500 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-gray-700 font-medium transition-all duration-300 ease-in-out ${
+                  account.type === type ? 'bg-indigo-50 text-indigo-600' : ''
+                }`}
               >
                 {type}
               </button>
@@ -101,7 +99,7 @@ const NewAccount = () => {
       ),
       2: account.type === 'Managed Portfolio' ? (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-800">Select Portfolio Type</h2>
+          <h2 className="text-2xl font-semibold text-gray-800">Select Portfolio Type</h2>
           <div className="grid grid-cols-3 gap-4">
             {['Aggressive', 'Mid', 'Cautious'].map((portfolio) => (
               <button
@@ -111,11 +109,9 @@ const NewAccount = () => {
                   handleNext();
                 }}
                 className={`
-                  py-4 rounded-xl border-2 transition-all duration-300
-                  ${account.portfolioType === portfolio
-                    ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                    : 'border-gray-300 text-gray-600 hover:border-gray-500'}
-                `}
+                  py-3 px-6 rounded-full bg-white shadow-md border border-gray-200 hover:shadow-lg hover:border-indigo-500 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-gray-700 font-medium transition-all duration-300 ease-in-out ${
+                  account.portfolioType === portfolio ? 'bg-indigo-50 text-indigo-600' : ''
+                }`}
               >
                 {portfolio}
               </button>
@@ -124,50 +120,57 @@ const NewAccount = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-800">Name Your Account</h2>
+          <h2 className="text-2xl font-semibold text-gray-800">Name Your Account</h2>
           <input
             type="text"
             value={account.name}
             onChange={(e) => updateAccount({ name: e.target.value })}
-            className="w-full py-3 px-4 border-2 rounded-xl focus:outline-none focus:border-indigo-500"
+            className="w-full py-3 px-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
             placeholder="Enter account name"
           />
         </div>
       ),
       3: (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-800">Make an Initial Deposit</h2>
-          <input
-            type="number"
-            value={account.depositAmount}
-            onChange={(e) => updateAccount({ depositAmount: e.target.value })}
-            className="w-full py-3 px-4 border-2 rounded-xl focus:outline-none focus:border-indigo-500"
-            placeholder="Enter deposit amount"
-          />
+          <h2 className="text-2xl font-semibold text-gray-800">Make an Initial Deposit</h2>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <DollarSign className="w-5 h-5 text-gray-400" />
+            </div>
+            <input
+                type="number"
+                value={account.depositAmount}
+                onChange={(e) => updateAccount({ depositAmount: e.target.value })}
+                className="w-full py-3 pl-10 pr-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                placeholder="Enter deposit amount"
+            />
+          </div>
         </div>
       ),
       4: (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-800">Recurring Payments</h2>
+          <h2 className="text-2xl font-semibold text-gray-800">Recurring Payments</h2>
           <div className="space-y-4">
-            <label>
-              Amount:
-              <input
-                type="number"
-                value={account.recurringPayment.amount}
-                onChange={(e) =>
-                  updateAccount({
-                    recurringPayment: {
-                      ...account.recurringPayment,
-                      amount: e.target.value,
-                    },
-                  })
-                }
-                className="w-full py-3 px-4 border-2 rounded-xl focus:outline-none focus:border-indigo-500"
-                placeholder="Enter monthly payment amount"
-              />
-            </label>
-            <label>
+            <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <DollarSign className="w-5 h-5 text-gray-400" />
+                </div>
+                <input
+                    type="number"
+                    value={account.recurringPayment.amount}
+                    onChange={(e) =>
+                        updateAccount({
+                            recurringPayment: {
+                                ...account.recurringPayment,
+                                amount: e.target.value,
+                            },
+                        })
+                    }
+                    className="w-full py-3 pl-10 pr-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                    placeholder="Enter monthly payment amount"
+                />
+            </div>
+            <label className="block text-gray-700">
               Frequency:
               <select
                 value={account.recurringPayment.frequency}
@@ -179,14 +182,14 @@ const NewAccount = () => {
                     },
                   })
                 }
-                className="w-full py-3 px-4 border-2 rounded-xl focus:outline-none focus:border-indigo-500"
+                className="mt-1 w-full py-3 px-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
               >
                 <option value="monthly">Monthly</option>
                 <option value="quarterly">Quarterly</option>
                 <option value="annually">Annually</option>
               </select>
             </label>
-            <label>
+            <label className="block text-gray-700">
               Start Date:
               <input
                 type="date"
@@ -199,7 +202,7 @@ const NewAccount = () => {
                     },
                   })
                 }
-                className="w-full py-3 px-4 border-2 rounded-xl focus:outline-none focus:border-indigo-500"
+                className="mt-1 w-full py-3 px-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
               />
             </label>
           </div>
@@ -207,11 +210,11 @@ const NewAccount = () => {
       ),
       5: (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-800">Select Bank Account</h2>
+          <h2 className="text-2xl font-semibold text-gray-800">Select Bank Account</h2>
           <select
             value={account.bankAccount}
             onChange={(e) => updateAccount({ bankAccount: e.target.value })}
-            className="w-full py-3 px-4 border-2 rounded-xl focus:outline-none focus:border-indigo-500"
+            className="w-full py-3 px-4 rounded-xl border border-gray-300 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
           >
             <option value="">Select a bank account</option>
             {bankAccounts.map((acc) => (
@@ -225,13 +228,6 @@ const NewAccount = () => {
     };
 
     return stepComponents[step] || null;
-  };
-
-  const isStepComplete = () => {
-    if (step === 2) {
-      return account.name.trim().length > 0; // Make sure account name is not empty
-    }
-    return true; // All other steps are valid by default
   };
 
   return (

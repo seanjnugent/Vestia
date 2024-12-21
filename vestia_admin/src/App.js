@@ -11,6 +11,9 @@ import NewTrade from './pages/NewTrade';
 import Profile from './pages/Profile';
 import Payments from './pages/Payments';
 import NewAccount from './pages/NewAccount';
+import NewClient from './pages/NewClient';
+import NewAsset from './pages/NewAsset';
+
 import Research from './pages/Research';
 import ResearchCrypto from './pages/ResearchCrypto';
 import ResearchFunds from './pages/ResearchFunds';
@@ -19,6 +22,9 @@ import Documents from './pages/Documents';
 import Register from './components/Register';
 import RegularPayments from './pages/RegularPayments';
 import ManagedPortfolios from './pages/ManagedPortfolios';
+import NewManagedPortfolio from './pages/NewManagedPortfolio';
+import Clients from './pages/Clients';
+import Client from './pages/Client';
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('token'); // Check for token
@@ -39,6 +45,8 @@ function App() {
                 <Sidebar />
                 <main className="flex-1 p-6">
                   <Routes>
+                    <Route path="/client/:id" element={<Client />} />
+                    <Route path="/clients" element={<Clients />} />
                     <Route path="/home" element={<Home />} />
                     <Route path="/accounts" element={<Accounts />} />
                     <Route path="/account/:id" element={<Account />} />
@@ -46,6 +54,7 @@ function App() {
                     <Route path="/manage-cash" element={<ManageCash />} />
                     <Route path="/new-trade" element={<NewTrade />} />
                     <Route path="/new-account" element={<NewAccount />} />
+                    <Route path="/new-client" element={<NewClient />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/payments" element={<Payments />} />
                     <Route path="/research" element={<Research />} />
@@ -56,6 +65,8 @@ function App() {
                     <Route path="/register" element={<Register />} />
                     <Route path="/regular-payments" element={<RegularPayments />} />
                     <Route path="/managed-portfolios" element={<ManagedPortfolios />} />
+                    <Route path="/new-managed-portfolio" element={<NewManagedPortfolio />} />
+                    <Route path="/new-asset" element={<NewAsset />} />
 
                   </Routes>
                 </main>
