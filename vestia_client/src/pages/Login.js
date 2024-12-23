@@ -11,7 +11,7 @@ const Login = () => {
     if (email === "test" && password === "test") {
       // Save fake user data to localStorage
       localStorage.setItem("token", "12345");
-      localStorage.setItem("userId", "1");
+      localStorage.setItem("userId", "14164");
       
       // Redirect to the home page after successful login
       navigate("/home");

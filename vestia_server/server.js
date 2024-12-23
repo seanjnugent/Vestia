@@ -1,19 +1,37 @@
 const express = require('express');
 const app = express();
-const clientRoutes = require('./routes/client'); // Import the client routes
-const cors = require('cors'); // Enable CORS if needed
+const port = 5000;
+const cors = require('cors');
+app.use(cors());
 
-// Middleware to parse JSON requests
+// Middleware
 app.use(express.json());
-app.use(cors()); // If you need to enable cross-origin requests
 
-// Set up the client routes
+// Import routes
+const clientRoutes = require('./routes/client');
+const accountRoutes = require('./routes/account');
+const tradeRoutes = require('./routes/trade');
+const paymentRoutes = require('./routes/payment');
+
+// Use routes
 app.use('/api/clients', clientRoutes);
+app.use('/api/accounts', accountRoutes);
+app.use('/api/trades', tradeRoutes);
+app.use('/api/payments', paymentRoutes);
 
-// Define the port to listen on
-const PORT = process.env.PORT || 5000;
+app.get('/test', (req, res) => {
+  res.json({ message: 'Server is working' });
+});
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
+});
+
+
+
+// Start server
+app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
 });

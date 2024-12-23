@@ -1,30 +1,18 @@
+
 const express = require('express');
-const { Pool } = require('pg');
-require('dotenv').config();
-
-// Set up PostgreSQL pool
-const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: parseInt(process.env.DB_PORT, 10),
-});
-
 const router = express.Router();
+const pool = require('../database');
 
-// GET all active clients
-router.get('/active', async (req, res) => {
+// Get active clients
+router.get('/active', async (req, res, next) => {
   try {
     const result = await pool.query('SELECT * FROM client WHERE status = $1', ['active']);
     res.json(result.rows);
   } catch (err) {
-    console.error('Error fetching active clients:', err);
-    res.status(500).json({ error: err.message });
+    next(err); // Pass errors to error handling middleware
   }
 });
 
-// GET client performance using stored procedure
 router.get('/client-performance/:client_id', async (req, res) => {
   const { client_id } = req.params;
 
@@ -45,5 +33,6 @@ router.get('/client-performance/:client_id', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 module.exports = router;

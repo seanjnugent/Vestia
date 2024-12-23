@@ -25,8 +25,8 @@ def get_cash_balance(conn, account_id):
             SELECT total_cash_balance
             FROM public.vw_cash_balance
             WHERE account_id = %s
-            ORDER BY total_cash_balance DESC
-            LIMIT 1;
+            order by random() desc
+            LIMIT 250;
         """, (account_id,))
         result = cur.fetchone()
     return result[0] if result else 0
@@ -37,8 +37,8 @@ def get_asset_balance(conn, account_id):
             SELECT account_id, asset_id, asset_holding
             FROM public.vw_asset_balance
             WHERE account_id = %s
-            ORDER BY asset_holding DESC
-            LIMIT 1;
+            ORDER BY random() DESC
+            LIMIT 250;
         """, (account_id,))
         result = cur.fetchone()
     return result if result else None
@@ -49,8 +49,8 @@ def get_random_account_for_buy(conn):
             SELECT account_id
             FROM public.vw_cash_balance
             WHERE total_cash_balance > 0
-            ORDER BY total_cash_balance DESC
-            LIMIT 1;
+            ORDER BY random() DESC
+            LIMIT 250;
         """)
         return cur.fetchone()
 
@@ -60,8 +60,8 @@ def get_random_account_for_sell(conn):
             SELECT account_id
             FROM public.vw_asset_balance
             WHERE asset_holding > 0
-            ORDER BY asset_holding DESC
-            LIMIT 1;
+            ORDER BY random() DESC
+            LIMIT 250;
         """)
         return cur.fetchone()
 
@@ -82,13 +82,12 @@ def get_asset_price(conn, asset_id):
         """, (asset_id,))
         result = cur.fetchone()
     return result if result else None
-
 def simulate_trade(conn, trade_count):
     try:
         if trade_count > 100:
             print("Trade limit reached.")
             return
-        
+
         # Randomly choose trade type: Buy or Sell
         trade_type = random.choices(['Buy', 'Sell'], weights=[75, 25], k=1)[0]
 
@@ -96,32 +95,26 @@ def simulate_trade(conn, trade_count):
             random_account = get_random_account_for_buy(conn)
             if random_account:
                 account_id = random_account[0]
-                cash_balance = get_cash_balance(conn, account_id)
+                cash_balance = float(get_cash_balance(conn, account_id))  # Convert Decimal to float
 
-                # Only process if the cash balance is greater than 0
                 if cash_balance <= 0:
                     print(f"Account {account_id} has insufficient cash balance (cash balance: {cash_balance}). Skipping.")
                     return
 
-                # Retrieve the asset list (assets available for trade)
                 assets = get_asset_list(conn)
-
                 if not assets:
                     print(f"No assets available for trading for account {account_id}.")
                     return
 
                 # Select a random asset to trade
                 asset_id, asset_price, currency_code = random.choice(assets)
+                asset_price = float(asset_price)  # Convert Decimal to float
 
-                # Ensure currency_code is available
                 if not currency_code:
                     print(f"Error: Asset {asset_id} does not have a currency code. Skipping trade.")
                     return
 
-                # Determine the maximum quantity the user can afford to buy based on the cash balance
-                max_quantity = cash_balance // asset_price
-
-                # Debug print the max quantity
+                max_quantity = int(cash_balance // asset_price)  # Use int for random.randint
                 print(f"Account {account_id} can afford {max_quantity} units of asset {asset_id}.")
 
                 if max_quantity < 1:
@@ -131,7 +124,6 @@ def simulate_trade(conn, trade_count):
                 trade_quantity = random.randint(1, max_quantity)
                 trade_cost = trade_quantity * asset_price
 
-                # Insert buy trade into the asset_trade table
                 with conn.cursor() as cur:
                     cur.execute("""
                         INSERT INTO public.asset_trade (
@@ -140,7 +132,6 @@ def simulate_trade(conn, trade_count):
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """, (account_id, asset_id, trade_quantity, asset_price, 'Buy', 'Completed', datetime.now(), datetime.now(), datetime.now()))
 
-                # Deduct cash for the buy transaction (insert into cash_trade table)
                 trade_note = f"Bought {trade_quantity} units of {asset_id}"
                 with conn.cursor() as cur:
                     cur.execute("""
@@ -162,20 +153,19 @@ def simulate_trade(conn, trade_count):
 
                 if asset_balance:
                     _, asset_id, asset_holding = asset_balance
+                    asset_holding = int(asset_holding)  # Convert Decimal to int
 
-                    # Fetch asset price and currency code
                     asset_data = get_asset_price(conn, asset_id)
                     if asset_data:
                         asset_price, currency_code = asset_data
+                        asset_price = float(asset_price)  # Convert Decimal to float
                     else:
                         print(f"Error: No price or currency found for asset {asset_id}. Skipping sell.")
                         return
 
-                    # Determine the trade quantity (randomly between 1 and asset_holding)
                     trade_quantity = random.randint(1, asset_holding)
                     trade_cost = trade_quantity * asset_price
 
-                    # Insert sell trade into the asset_trade table
                     with conn.cursor() as cur:
                         cur.execute("""
                             INSERT INTO public.asset_trade (
@@ -184,7 +174,6 @@ def simulate_trade(conn, trade_count):
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                         """, (account_id, asset_id, -trade_quantity, asset_price, 'Sell', 'Completed', datetime.now(), datetime.now(), datetime.now()))
 
-                    # Add cash for the sell transaction (insert into cash_trade table)
                     trade_note = f"Sold {trade_quantity} units of {asset_id}"
                     with conn.cursor() as cur:
                         cur.execute("""
@@ -201,8 +190,9 @@ def simulate_trade(conn, trade_count):
     except Exception as e:
         print(f"Error simulating trade: {e}")
 
+
 # Example usage: Simulate trades for 15 random accounts
-for i in range(25):  # Limit to 15 trades
+for i in range(250):  # Limit to 15 trades
     simulate_trade(conn, i)
 
 conn.close()

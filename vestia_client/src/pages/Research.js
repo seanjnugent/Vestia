@@ -67,10 +67,12 @@ const Research = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
+    <div className="min-h-screen bg-white p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-900">Research Dashboard</h1>
+        <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
+          Research Dashboard
+        </h1>
         <div className="relative w-96">
           <input
             type="text"

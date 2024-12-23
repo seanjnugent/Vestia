@@ -26,8 +26,9 @@ const Documents = () => {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto bg-white rounded-lg shadow-lg">
-      <h1 className="text-2xl font-semibold mb-4">Documents</h1>
+    <div className="min-h-screen bg-white p-6 space-y-6">
+                <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
+                Documents</h1>
 
       {/* Category Tabs */}
       <div className="flex space-x-4 mb-6">

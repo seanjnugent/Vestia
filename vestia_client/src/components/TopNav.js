@@ -18,7 +18,7 @@ const TopNav = () => {
     };
 
     return (
-        <div className="w-full bg-gradient-to-r from-[#ff6b6b] via-[#ffa500] to-[#ffff00] text-white shadow-md py-2 md:py-6"> {/* Adjusted padding for mobile */}
+        <div className="w-full bg-gradient-to-r from-[#38d6b7] to-[#38d6c7] text-white shadow-md py-2 md:py-6"> {/* Adjusted padding for mobile */}
             <div className="container mx-auto px-6 flex md:items-center md:justify-between"> {/* Flex only on medium screens and up */}
                 <div className="flex justify-between items-center w-full md:w-auto">
                     <NavLink to="/home" className="flex items-center gap-2">
@@ -70,7 +70,7 @@ const TopNav = () => {
                           </NavLink>
                       </li>
                       <li className="md:hidden">
-                        <button onClick={handleLogout} className="px-3 py-1 rounded transition bg-[#ff6b6b] hover:bg-[#e05252] text-white block w-full text-left">
+                        <button onClick={handleLogout} className="px-3 py-1 rounded transition bg-[#279680] hover:bg-[#2dab92] text-white block w-full text-left">
                             <LogOut size={18} className="inline mr-1 -mt-1" />
                             <span>Logout</span>
                         </button>
@@ -82,7 +82,7 @@ const TopNav = () => {
                         <User size={18} className="inline mr-1 -mt-1" />
                         <span>Profile</span>
                     </NavLink>
-                    <button onClick={handleLogout} className="px-3 py-1 rounded transition bg-[#ff6b6b] hover:bg-[#e05252] text-white">
+                    <button onClick={handleLogout} className="px-3 py-1 rounded transition bg-[#2dab92] hover:bg-[#279680] text-white">
                         <LogOut size={18} className="inline mr-1 -mt-1" />
                         <span>Logout</span>
                     </button>
