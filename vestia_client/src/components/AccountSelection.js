@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { BeatLoader } from "react-spinners";
-
 const AccountSelection = ({ onContinue }) => {
   const [accounts, setAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
@@ -66,9 +65,9 @@ const AccountSelection = ({ onContinue }) => {
           {accounts.map((acc) => (
             <button
               key={acc.account_id}
-              onClick={() => setSelectedAccount(acc.account_id)}
+              onClick={() => setSelectedAccount(acc)} // Store the full account object
               className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                selectedAccount === acc.account_id
+                selectedAccount?.account_id === acc.account_id // Compare account_id for highlighting
                   ? "border-blue-500 bg-blue-50"
                   : "border-gray-200 hover:border-blue-300"
               }`}
@@ -92,7 +91,7 @@ const AccountSelection = ({ onContinue }) => {
         </div>
       </div>
       <button
-        onClick={() => onContinue(selectedAccount)}
+        onClick={() => onContinue(selectedAccount)} // Pass the entire selected account object
         disabled={!selectedAccount}
         className={`w-full py-3 rounded-xl transition-all ${
           selectedAccount

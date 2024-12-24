@@ -12,12 +12,14 @@ const clientRoutes = require('./routes/client');
 const accountRoutes = require('./routes/account');
 const tradeRoutes = require('./routes/trade');
 const paymentRoutes = require('./routes/payment');
+const assetRoutes = require('./routes/asset');
 
 // Use routes
 app.use('/api/clients', clientRoutes);
 app.use('/api/accounts', accountRoutes);
 app.use('/api/trades', tradeRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/assets', assetRoutes);
 
 app.get('/test', (req, res) => {
   res.json({ message: 'Server is working' });

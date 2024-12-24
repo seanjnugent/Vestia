@@ -4,45 +4,59 @@ import { Sparkles, PlusCircle, History, PiggyBank, Wallet, RefreshCw } from 'luc
 import AnnualAllowance from '../components/AnnualAllowance';
 import PerformanceGraph from '../components/PerformanceGraph';
 import { BeatLoader } from 'react-spinners';
+import { Pie } from 'react-chartjs-2';
+import 'chart.js/auto';
 
 const Account = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [accountDetails, setAccountDetails] = useState(null);
   const [portfolioHistory, setPortfolioHistory] = useState([]);
+  const [holdings, setHoldings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showPaymentMenu, setShowPaymentMenu] = useState(false);
-
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-
+  
         const today = new Date();
         const ninetyDaysAgo = new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000);
-
-        const endDate = new Date();
-        const [accountResponse, historyResponse] = await Promise.all([
+  
+        const endDate = today.toISOString(); // Full ISO timestamp
+        const startDate = ninetyDaysAgo.toISOString(); // Full ISO timestamp
+  
+        const [accountResponse, historyResponse, holdingsResponse] = await Promise.all([
           fetch(`http://localhost:5000/api/accounts/account-summary/${id}`),
           fetch(
-            `http://localhost:5000/api/accounts/account-history/${id}?startDate=${ninetyDaysAgo.toISOString().split('T')[0]}&endDate=${endDate.toISOString().split('T')[0]}`
+            `http://localhost:5000/api/accounts/account-history/${id}?startDate=${startDate}&endDate=${endDate}`
           ),
+          fetch(`http://localhost:5000/api/accounts/account-holdings/${id}`),
         ]);
-
+  
         if (!accountResponse.ok || !historyResponse.ok) {
           throw new Error('Failed to fetch data');
         }
-
+  
         const [accountData, historyData] = await Promise.all([
           accountResponse.json(),
           historyResponse.json(),
         ]);
-
+  
+        let holdingsData = [];
+        if (holdingsResponse.ok) {
+          holdingsData = await holdingsResponse.json();
+        } else if (holdingsResponse.status === 404) {
+          console.warn(`No holdings found for account ID: ${id}`);
+        } else {
+          throw new Error('Failed to fetch holdings data');
+        }
+  
         if (Array.isArray(accountData) && accountData.length > 0) {
           setAccountDetails(accountData[0]);
         }
-
+  
         setPortfolioHistory(
           historyData.map((d) => ({
             date: new Date(d.value_date).toLocaleDateString(),
@@ -51,6 +65,8 @@ const Account = () => {
             cash: d.total_cash_value,
           }))
         );
+  
+        setHoldings(holdingsData);
       } catch (err) {
         setError(err.message);
         console.error('Error fetching data:', err);
@@ -58,9 +74,10 @@ const Account = () => {
         setLoading(false);
       }
     };
-
+  
     fetchData();
   }, [id]);
+  
 
   if (loading) {
     return (
@@ -79,6 +96,17 @@ const Account = () => {
   }
 
   const isManaged = !!accountDetails?.managed_portfolio_name;
+
+  const pieData = {
+    labels: holdings.map((holding) => holding.asset_code),
+    datasets: [
+      {
+        label: 'Holdings',
+        data: holdings.map((holding) => holding.asset_value),
+        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+      },
+    ],
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -163,32 +191,52 @@ const Account = () => {
         <PerformanceGraph portfolioHistory={portfolioHistory} />
       </div>
 
-      {/* Transaction History */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <History className="w-5 h-5 text-pink-500" />
-          <h2 className="text-xl font-semibold">Transaction History</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-3 px-4">Date</th>
-                <th className="text-left py-3 px-4">Type</th>
-                <th className="text-right py-3 px-4">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {accountDetails?.transactions?.map((transaction, index) => (
-                <tr key={index} className="border-b hover:bg-gray-50">
-                  <td className="py-3 px-4">{transaction.date}</td>
-                  <td className="py-3 px-4">{transaction.type}</td>
-                  <td className="py-3 px-4 text-right">£{Number(transaction.amount).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {/* Holdings Table and Pie Chart */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {holdings.length > 0 ? (
+          <>
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">Holdings</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-3 px-4">Asset</th>
+                      <th className="text-right py-3 px-4">Units Held</th>
+                      <th className="text-right py-3 px-4">Value (£)</th>
+                      <th className="text-right py-3 px-4">Net Performance (£)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {holdings.map((holding, index) => (
+                      <tr key={index} className="border-b hover:bg-gray-50">
+                        <td className="py-3 px-4">{holding.asset_code}</td>
+                        <td className="py-3 px-4 text-right">
+                          {Number(holding.asset_holding).toLocaleString()}
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          £{Number(holding.asset_value).toLocaleString()}
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          £{Number(holding.net_performance).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">Holdings Distribution</h2>
+              <Pie data={pieData} />
+            </div>
+          </>
+        ) : (
+          <div className="col-span-2 text-center bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-xl font-semibold mb-4">No Holdings</h2>
+            <p className="text-gray-600">This account currently has no holdings to display.</p>
+          </div>
+        )}
       </div>
     </div>
   );

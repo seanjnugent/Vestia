@@ -6,19 +6,36 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const navigate = useNavigate(); // Add useNavigate hook
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (email === "test" && password === "test") {
-      // Save fake user data to localStorage
-      localStorage.setItem("token", "12345");
-      localStorage.setItem("userId", "14164");
-      
-      // Redirect to the home page after successful login
-      navigate("/home");
-    } else {
-      alert("Invalid credentials!");
+  
+    try {
+      const response = await fetch('http://localhost:5000/api/clients/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email_address: email, password }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(errorData.message || 'Login failed!');
+        return;
+      }
+  
+      const data = await response.json();
+  
+      // Save user data to localStorage
+      localStorage.setItem('token', '12345'); // Replace with actual token if using JWT
+      localStorage.setItem('userId', data.userId);
+  
+      // Redirect to the home page
+      navigate('/home');
+    } catch (err) {
+      console.error('Error during login:', err);
+      alert('An error occurred. Please try again.');
     }
   };
+  
 
   const handleSignUp = () => {
     navigate("/register"); // Navigate to the Register page
