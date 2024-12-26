@@ -16,6 +16,7 @@ const Account = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showPaymentMenu, setShowPaymentMenu] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -24,15 +25,13 @@ const Account = () => {
         const today = new Date();
         const ninetyDaysAgo = new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000);
   
-        const endDate = today.toISOString(); // Full ISO timestamp
-        const startDate = ninetyDaysAgo.toISOString(); // Full ISO timestamp
+        const endDate = today.toISOString();
+        const startDate = ninetyDaysAgo.toISOString();
   
         const [accountResponse, historyResponse, holdingsResponse] = await Promise.all([
           fetch(`http://localhost:5000/api/accounts/account-summary/${id}`),
-          fetch(
-            `http://localhost:5000/api/accounts/account-history/${id}?startDate=${startDate}&endDate=${endDate}`
-          ),
-          fetch(`http://localhost:5000/api/accounts/account-holdings/${id}`),
+          fetch(`http://localhost:5000/api/accounts/account-history/${id}`),
+          fetch(`http://localhost:5000/api/accounts/account-holdings/${id}`)
         ]);
   
         if (!accountResponse.ok || !historyResponse.ok) {
@@ -41,9 +40,8 @@ const Account = () => {
   
         const [accountData, historyData] = await Promise.all([
           accountResponse.json(),
-          historyResponse.json(),
+          historyResponse.json()
         ]);
-  
         let holdingsData = [];
         if (holdingsResponse.ok) {
           holdingsData = await holdingsResponse.json();
@@ -57,12 +55,15 @@ const Account = () => {
           setAccountDetails(accountData[0]);
         }
   
+
+        // Parse the Performance JSON data
+        const performanceData = historyData[0]?.performance_history || [];
+
         setPortfolioHistory(
-          historyData.map((d) => ({
-            date: new Date(d.value_date).toLocaleDateString(),
-            value: d.total_portfolio_value,
-            assets: d.total_asset_value,
-            cash: d.total_cash_value,
+          performanceData.map((d) => ({
+            date: d.date, // Keep as ISO string
+            total_asset_value: parseFloat(d.total_asset_value),
+            cash_balance: parseFloat(d.cash_balance),
           }))
         );
   
@@ -77,7 +78,6 @@ const Account = () => {
   
     fetchData();
   }, [id]);
-  
 
   if (loading) {
     return (
@@ -108,6 +108,9 @@ const Account = () => {
     ],
   };
 
+  const latestPortfolioValue = portfolioHistory.length > 0 ? 
+    portfolioHistory[portfolioHistory.length - 1].value : 0;
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Account Summary */}
@@ -133,13 +136,12 @@ const Account = () => {
           </div>
 
           <div className="text-right space-y-2">
-            <p className="text-2xl font-semibold">
-              £{Number(portfolioHistory[portfolioHistory.length - 1]?.value || 0).toLocaleString()}
-            </p>
-            <p className="text-green-500 font-medium">
-              +£{Number(accountDetails?.yearChange || 0).toLocaleString()} ({accountDetails?.yearPercentage || '+0%'})
-            </p>
-
+  <p className="text-2xl font-semibold">
+    £{Number(accountDetails?.total_account_value || 0).toLocaleString()}
+  </p>
+  <p className="text-gray-600 font-medium">
+    Cash Available: £{Number(accountDetails?.cash_balance_sum || 0).toLocaleString()}
+  </p>
             {/* Action Buttons */}
             <div className="flex gap-2 mt-4 justify-end relative">
               <button

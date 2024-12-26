@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@craco/craco": "^7.1.0",
     "concurrently": "^9.1.0",
     "cross-env": "^7.0.3"
   },
@@ -20,6 +21,7 @@
     "@emotion/styled": "^11.14.0",
     "@mrmlnc/readdir-enhanced": "^2.2.1",
     "@mui/material": "^6.2.1",
+    "@radix-ui/react-slider": "^1.2.2",
     "array-uniq": "^3.0.0",
     "arrify": "^3.0.0",
     "axios": "^1.7.9",
@@ -36,6 +38,7 @@
     "react": "^19.0.0",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^19.0.0",
-    "react-spinners": "^0.15.0"
+    "react-spinners": "^0.15.0",
+    "tailwindcss-animate": "^1.0.7"
   }
 }

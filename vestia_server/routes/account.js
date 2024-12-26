@@ -49,7 +49,7 @@ router.get('/account-history/:account_id', async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT * FROM account_history where account_id = $1', 
+      'SELECT * FROM account_performance where account_id = $1', 
       [account_id] // Pass account_id to the query
     );
 

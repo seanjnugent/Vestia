@@ -201,10 +201,6 @@ def main():
         logging.error(f"Error fetching account IDs: {str(e)}")
         return
 
-    # Limit to top 20 accounts for testing
-    account_ids = account_ids[:20]
-    logging.info(f"Processing limited to top 20 accounts: {account_ids}")
-
     # Define date range
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=365)
