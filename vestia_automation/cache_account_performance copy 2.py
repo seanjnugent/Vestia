@@ -20,7 +20,7 @@ db_host = os.getenv("DB_HOST")
 db_name = os.getenv("DB_NAME")
 
 db_url = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}/{db_name}"
-engine = create_engine(db_url, pool_size=50, max_overflow=80)
+engine = create_engine(db_url, pool_size=100, max_overflow=30)
 
 # Lock for thread-safe database operations
 db_lock = Lock()
@@ -43,13 +43,13 @@ def create_temp_tables():
                     FROM dates
                     WHERE date < CURRENT_DATE
                 )
-                SELECT
+                SELECT 
                     d.date,
                     at.account_id,
                     at.asset_id,
                     COALESCE(SUM(at.asset_trade_quantity), 0) as quantity
                 FROM dates d
-                LEFT JOIN public.asset_trade at
+                LEFT JOIN public.asset_trade at 
                     ON at.date_completed::date <= d.date
                 GROUP BY d.date, at.account_id, at.asset_id
             """))
@@ -64,12 +64,12 @@ def create_temp_tables():
                     FROM dates
                     WHERE date < CURRENT_DATE
                 )
-                SELECT
+                SELECT 
                     d.date,
                     ct.account_id,
                     COALESCE(SUM(ct.amount), 0) as balance
                 FROM dates d
-                LEFT JOIN public.cash_trade ct
+                LEFT JOIN public.cash_trade ct 
                     ON ct.date_completed::date <= d.date
                 WHERE ct.cash_trade_status = 'Completed'
                 GROUP BY d.date, ct.account_id
@@ -77,19 +77,21 @@ def create_temp_tables():
 
             logging.info("Temporary tables created successfully.")
 
-def process_account(account_id, start_date, end_date):
+def process_account(account_id, global_start_date, end_date):
     try:
-        # Find first cash trade date
+        # Find the first cash trade date
         with engine.connect() as conn:
-            first_trade = conn.execute(
+            first_trade_date = conn.execute(
                 text("SELECT MIN(date_completed::date) FROM public.cash_trade WHERE account_id = :account_id AND cash_trade_status = 'Completed'"),
                 {"account_id": account_id}
-            ).first()
-
-            if not first_trade or not first_trade[0]:
+            ).scalar()
+            
+            if not first_trade_date:
+                logging.warning(f"No trades found for account {account_id}. Skipping.")
                 return account_id, False
-
-            start_date = max(start_date, first_trade[0])
+                
+            # Ensure start_date aligns with the first trade date
+            start_date = max(global_start_date, first_trade_date)
 
         query = text("""
             WITH dates AS (
@@ -97,12 +99,12 @@ def process_account(account_id, start_date, end_date):
             ),
             asset_balances AS (
                 -- Get cumulative asset quantities per day
-                SELECT
+                SELECT 
                     d.date,
                     at.asset_id,
                     SUM(at.asset_trade_quantity) as balance
                 FROM dates d
-                INNER JOIN public.asset_trade at ON
+                INNER JOIN public.asset_trade at ON 
                     at.account_id = :account_id AND
                     at.date_completed::date <= d.date
                 GROUP BY d.date, at.asset_id
@@ -119,24 +121,22 @@ def process_account(account_id, start_date, end_date):
                     ap.price_date = d.date
             ),
             daily_values AS (
-                SELECT
+                SELECT 
                     d.date,
                     COALESCE(SUM(ab.balance * lp.price), 0) as total_asset_value,
-                    COALESCE((
-                        SELECT SUM(amount)
-                        FROM public.cash_trade
-                        WHERE account_id = :account_id
-                        AND cash_trade_status = 'Completed'
-                        AND date_completed::date <= d.date
-                    ), 0) as cash_balance
+                    COALESCE((SELECT SUM(amount)
+                              FROM public.cash_trade
+                              WHERE account_id = :account_id
+                              AND cash_trade_status = 'Completed'
+                              AND date_completed::date <= d.date), 0) as cash_balance
                 FROM dates d
                 LEFT JOIN asset_balances ab ON ab.date = d.date
-                LEFT JOIN latest_prices lp ON
-                    lp.date = d.date AND
+                LEFT JOIN latest_prices lp ON 
+                    lp.date = d.date AND 
                     lp.asset_id = ab.asset_id
                 GROUP BY d.date
             )
-            SELECT
+            SELECT 
                 date,
                 total_asset_value,
                 cash_balance
@@ -151,18 +151,14 @@ def process_account(account_id, start_date, end_date):
                 "account_id": account_id
             }).mappings()
 
-            final_data = [{
-                "date": row["date"].date() if isinstance(row["date"], date) else row["date"],
-                "total_asset_value": float(row["total_asset_value"]),
-                "cash_balance": float(row["cash_balance"])
-            } for row in result]
+            final_data = [dict(row) for row in result]
 
         with engine.begin() as conn:
             conn.execute(
                 text("""
                     INSERT INTO public.account_performance (account_id, performance_history)
                     VALUES (:account_id, :performance_history)
-                    ON CONFLICT (account_id) DO UPDATE
+                    ON CONFLICT (account_id) DO UPDATE 
                     SET performance_history = excluded.performance_history
                 """),
                 {
@@ -176,6 +172,7 @@ def process_account(account_id, start_date, end_date):
     except Exception as e:
         logging.error(f"Error processing account {account_id}: {str(e)}")
         return account_id, False
+    
 
 def main():
     logging.info("Starting main process...")
@@ -198,16 +195,16 @@ def main():
 
     # Define date range
     end_date = date.today()
-    start_date = end_date - timedelta(days=365)
+    global_start_date = end_date - timedelta(days=365)
 
     # Number of worker threads
-    max_workers = min(6, len(account_ids))
+    max_workers = min(100, len(account_ids))
 
     successful = failed = 0
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # Submit tasks
         future_to_account = {
-            executor.submit(process_account, account_id, start_date, end_date): account_id
+            executor.submit(process_account, account_id, global_start_date, end_date): account_id 
             for account_id in account_ids
         }
 

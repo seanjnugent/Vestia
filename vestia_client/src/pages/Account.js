@@ -38,7 +38,7 @@ const Account = () => {
           throw new Error('Failed to fetch data');
         }
   
-        const [accountData, historyData] = await Promise.all([
+        const [accountData, historyData] = await Promise.all([ 
           accountResponse.json(),
           historyResponse.json()
         ]);
@@ -55,10 +55,9 @@ const Account = () => {
           setAccountDetails(accountData[0]);
         }
   
-
         // Parse the Performance JSON data
         const performanceData = historyData[0]?.performance_history || [];
-
+  
         setPortfolioHistory(
           performanceData.map((d) => ({
             date: d.date, // Keep as ISO string
@@ -115,9 +114,7 @@ const Account = () => {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Account Summary */}
       <div
-        className={`bg-white rounded-xl shadow-lg p-6 ${
-          isManaged ? 'bg-gradient-to-r from-pink-50/50 to-violet-50/50' : ''
-        }`}
+        className={`bg-white rounded-xl shadow-lg p-6 ${isManaged ? 'bg-gradient-to-r from-pink-50/50 to-violet-50/50' : ''}`}
       >
         <div className="flex justify-between items-start">
           <div>
@@ -136,12 +133,12 @@ const Account = () => {
           </div>
 
           <div className="text-right space-y-2">
-  <p className="text-2xl font-semibold">
-    £{Number(accountDetails?.total_account_value || 0).toLocaleString()}
-  </p>
-  <p className="text-gray-600 font-medium">
-    Cash Available: £{Number(accountDetails?.cash_balance_sum || 0).toLocaleString()}
-  </p>
+            <p className="text-2xl font-semibold">
+              £{Number(accountDetails?.total_account_value || 0).toLocaleString()}
+            </p>
+            <p className="text-gray-600 font-medium">
+              Cash Available: £{Number(accountDetails?.cash_balance_sum || 0).toLocaleString()}
+            </p>
             {/* Action Buttons */}
             <div className="flex gap-2 mt-4 justify-end relative">
               <button
@@ -190,7 +187,16 @@ const Account = () => {
       {/* Graphs and Allowance */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <AnnualAllowance accountDetails={accountDetails} />
-        <PerformanceGraph portfolioHistory={portfolioHistory} />
+        
+        {/* Performance Graph */}
+        {portfolioHistory.length > 0 ? (
+          <PerformanceGraph portfolioHistory={portfolioHistory} />
+        ) : (
+          <div className="col-span-2 bg-white rounded-xl shadow-lg p-6 text-center">
+            <h2 className="text-xl font-semibold text-gray-600 mb-4">Performance Graph Not Available</h2>
+            <p className="text-gray-400">No historical data available for this account's performance.</p>
+          </div>
+        )}
       </div>
 
       {/* Holdings Table and Pie Chart */}

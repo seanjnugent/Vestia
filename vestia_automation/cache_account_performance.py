@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
-from datetime import datetime, timedelta
+from datetime import date, timedelta
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import logging
@@ -20,7 +20,7 @@ db_host = os.getenv("DB_HOST")
 db_name = os.getenv("DB_NAME")
 
 db_url = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}/{db_name}"
-engine = create_engine(db_url, pool_size=20, max_overflow=30)
+engine = create_engine(db_url, pool_size=100, max_overflow=30)
 
 # Lock for thread-safe database operations
 db_lock = Lock()
@@ -107,20 +107,15 @@ def process_account(account_id, start_date, end_date):
                 GROUP BY d.date, at.asset_id
                 HAVING SUM(at.asset_trade_quantity) != 0
             ),
-            latest_prices AS (
+              latest_prices AS (
                 -- Get latest price for each asset for each date
-                SELECT DISTINCT ON (d.date, ab.asset_id)
+                SELECT
                     d.date,
-                    ab.asset_id,
-                    FIRST_VALUE(ap.amount) OVER (
-                        PARTITION BY d.date, ab.asset_id
-                        ORDER BY ap.price_date DESC
-                    ) as price
+                    ap.asset_id,
+                    ap.amount as price
                 FROM dates d
-                CROSS JOIN (SELECT DISTINCT asset_id FROM asset_balances) ab
-                LEFT JOIN public.asset_price ap ON 
-                    ap.asset_id = ab.asset_id AND 
-                    ap.price_date <= d.date
+                JOIN public.asset_price ap ON
+                    ap.price_date = d.date
             ),
             daily_values AS (
                 SELECT 
@@ -156,7 +151,7 @@ def process_account(account_id, start_date, end_date):
             }).mappings()
 
             final_data = [{
-                "date": row["date"].date() if isinstance(row["date"], datetime) else row["date"],
+                "date": row["date"].date() if isinstance(row["date"], date) else row["date"],
                 "total_asset_value": float(row["total_asset_value"]),
                 "cash_balance": float(row["cash_balance"])
             } for row in result]
@@ -202,11 +197,11 @@ def main():
         return
 
     # Define date range
-    end_date = datetime.now().date()
+    end_date = date.today()
     start_date = end_date - timedelta(days=365)
 
     # Number of worker threads
-    max_workers = min(20, len(account_ids))
+    max_workers = min(100, len(account_ids))
 
     successful = failed = 0
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
