@@ -167,4 +167,4 @@ def generate_investors(number_of_investors):
 
 # Example usage
 if __name__ == "__main__":
-    generate_investors(25)
+    generate_investors(2)

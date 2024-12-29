@@ -20,7 +20,7 @@ db_host = os.getenv("DB_HOST")
 db_name = os.getenv("DB_NAME")
 
 db_url = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}/{db_name}"
-engine = create_engine(db_url, pool_size=50, max_overflow=80)
+engine = create_engine(db_url, pool_size=50, max_overflow=30)
 
 # Lock for thread-safe database operations
 db_lock = Lock()
@@ -109,14 +109,23 @@ def process_account(account_id, start_date, end_date):
                 HAVING SUM(at.asset_trade_quantity) != 0
             ),
             latest_prices AS (
-                -- Get latest price for each asset for each date
-                SELECT
+                -- Get latest available price for each asset for each date
+                SELECT DISTINCT ON (d.date, ap.asset_id)
                     d.date,
                     ap.asset_id,
-                    ap.amount as price
+                    FIRST_VALUE(ap.amount) OVER (
+                        PARTITION BY d.date, ap.asset_id
+                        ORDER BY ap.price_date DESC
+                    ) as price
                 FROM dates d
-                JOIN public.asset_price ap ON
-                    ap.price_date = d.date
+                CROSS JOIN (
+                    SELECT DISTINCT asset_id 
+                    FROM asset_balances
+                ) ab
+                LEFT JOIN public.asset_price ap ON
+                    ap.price_date <= d.date
+                    AND ap.asset_id = ab.asset_id
+                WHERE ap.price_date IS NOT NULL
             ),
             daily_values AS (
                 SELECT
@@ -190,7 +199,7 @@ def main():
     # Fetch account IDs
     try:
         with engine.connect() as conn:
-            account_ids = [row[0] for row in conn.execute(text("SELECT account_id FROM public.account"))]
+            account_ids = [row[0] for row in conn.execute(text("SELECT distinct account_id FROM public.cash_trade union SELECT distinct account_id FROM public.asset_trade"))]
             logging.info(f"Fetched {len(account_ids)} account IDs.")
     except Exception as e:
         logging.error(f"Error fetching account IDs: {str(e)}")
@@ -201,7 +210,7 @@ def main():
     start_date = end_date - timedelta(days=365)
 
     # Number of worker threads
-    max_workers = min(6, len(account_ids))
+    max_workers = min(12, len(account_ids))
 
     successful = failed = 0
     with ThreadPoolExecutor(max_workers=max_workers) as executor:

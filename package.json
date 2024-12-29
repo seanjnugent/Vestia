@@ -20,7 +20,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mrmlnc/readdir-enhanced": "^2.2.1",
-    "@mui/material": "^6.2.1",
+    "@mui/material": "^6.3.0",
     "@radix-ui/react-slider": "^1.2.2",
     "array-uniq": "^3.0.0",
     "arrify": "^3.0.0",

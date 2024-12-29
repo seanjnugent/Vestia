@@ -20,7 +20,7 @@ db_host = os.getenv("DB_HOST")
 db_name = os.getenv("DB_NAME")
 
 db_url = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}/{db_name}"
-engine = create_engine(db_url, pool_size=100, max_overflow=30)
+engine = create_engine(db_url, pool_size=40, max_overflow=30)
 
 # Lock for thread-safe database operations
 db_lock = Lock()
@@ -201,7 +201,7 @@ def main():
     start_date = end_date - timedelta(days=365)
 
     # Number of worker threads
-    max_workers = min(100, len(account_ids))
+    max_workers = min(50, len(account_ids))
 
     successful = failed = 0
     with ThreadPoolExecutor(max_workers=max_workers) as executor:

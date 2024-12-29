@@ -72,7 +72,7 @@ router.post('/login', async (req, res) => {
 
 router.post('/new-client', async (req, res) => {
   const {
-    firstName, // Adjust property names to match your request body
+    firstName,
     surname,
     dateOfBirth,
     countryOfResidence,
@@ -83,34 +83,36 @@ router.post('/new-client', async (req, res) => {
   } = req.body;
 
   try {
-    // Validate required fields (optional, adjust as needed)
-    if (!firstName || !surname || !dateOfBirth || !emailAddress) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
     const clientData = [
       firstName,
       surname,
       dateOfBirth,
+      JSON.stringify(residentialAddress),
       countryOfResidence,
-      residentialAddress,
-      clientProfile,
+      JSON.stringify(clientProfile),
       emailAddress,
       phoneNumber,
     ];
 
-    // Call the stored procedure with client data
-    const result = await pool.query('SELECT * FROM post_new_client($1, $2, $3, $4, $5, $6, $7, $8)', clientData);
+    const result = await pool.query(
+      'SELECT * FROM post_new_client($1, $2, $3, $4, $5, $6, $7, $8) AS f(client_id integer, message text)',
+      clientData
+    );
 
-    // Check for successful insertion (optional)
-    if (result.rowCount === 0) {
-      return res.status(500).json({ error: 'Client creation failed' });
+    if (result.rows.length > 0) {
+      res.status(201).json({
+        message: result.rows[0].message,
+        clientId: result.rows[0].client_id
+      });
+    } else {
+      res.status(500).json({ error: 'Client creation failed' });
     }
-
-    res.status(201).json({ message: 'Client created successfully' });
   } catch (err) {
     console.error('Error creating client:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({
+      error: 'Internal server error',
+      details: err.message
+    });
   }
 });
 
