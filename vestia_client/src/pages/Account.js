@@ -21,60 +21,56 @@ const Account = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-  
+
         const today = new Date();
         const ninetyDaysAgo = new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000);
-  
-        const endDate = today.toISOString();
-        const startDate = ninetyDaysAgo.toISOString();
-  
+
+        const endDate = today.toISOString().split("T")[0]; // YYYY-MM-DD format
+        const startDate = ninetyDaysAgo.toISOString().split("T")[0];
+
+        // Update the history API call to include start_date and end_date as query params
         const [accountResponse, historyResponse, holdingsResponse] = await Promise.all([
           fetch(`http://localhost:5000/api/accounts/account-summary/${id}`),
-          fetch(`http://localhost:5000/api/accounts/account-history/${id}`),
-          fetch(`http://localhost:5000/api/accounts/account-holdings/${id}`)
+          fetch(`http://localhost:5000/api/accounts/account-history-new/${id}?start_date=${startDate}&end_date=${endDate}`),
+          fetch(`http://localhost:5000/api/accounts/account-holdings/${id}`),
         ]);
-  
+
         if (!accountResponse.ok || !historyResponse.ok) {
-          throw new Error('Failed to fetch data');
+          throw new Error("Failed to fetch data");
         }
-  
-        const [accountData, historyData] = await Promise.all([ 
+
+        const [accountData, historyData] = await Promise.all([
           accountResponse.json(),
-          historyResponse.json()
+          historyResponse.json(),
         ]);
+
         let holdingsData = [];
         if (holdingsResponse.ok) {
           holdingsData = await holdingsResponse.json();
         } else if (holdingsResponse.status === 404) {
           console.warn(`No holdings found for account ID: ${id}`);
         } else {
-          throw new Error('Failed to fetch holdings data');
+          throw new Error("Failed to fetch holdings data");
         }
-  
+
         if (Array.isArray(accountData) && accountData.length > 0) {
           setAccountDetails(accountData[0]);
         }
-  
-        // Parse the Performance JSON data
-        const performanceData = historyData[0]?.performance_history || [];
-  
-        setPortfolioHistory(
-          performanceData.map((d) => ({
-            date: d.date, // Keep as ISO string
-            total_asset_value: parseFloat(d.total_asset_value),
-            cash_balance: parseFloat(d.cash_balance),
-          }))
-        );
-  
+
+        const performanceData = Array.isArray(historyData) ? historyData : [];
+        setPortfolioHistory(performanceData);
+        
+        console.log(performanceData);
+
         setHoldings(holdingsData);
       } catch (err) {
         setError(err.message);
-        console.error('Error fetching data:', err);
+        console.error("Error fetching data:", err);
       } finally {
         setLoading(false);
       }
     };
-  
+
     fetchData();
   }, [id]);
 
@@ -108,7 +104,7 @@ const Account = () => {
   };
 
   const latestPortfolioValue = portfolioHistory.length > 0 ? 
-    portfolioHistory[portfolioHistory.length - 1].value : 0;
+    portfolioHistory[portfolioHistory.length - 1].total_asset_value : 0;
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">

@@ -8,23 +8,40 @@ import { Slider } from '@/components/ui/slider';
 
 ChartJS.register(...registerables);
 
-const DEFAULT_DAYS = 180;
+const DEFAULT_DAYS = 90;
 
 const PerformanceGraph = ({ portfolioHistory }) => {
   const [dateRange, setDateRange] = useState(DEFAULT_DAYS);
   const [filteredData, setFilteredData] = useState([]);
 
   useEffect(() => {
-    if (!portfolioHistory || portfolioHistory.length === 0) return;
+    // Add console.log to debug incoming data
+    console.log('Raw portfolioHistory:', portfolioHistory);
 
-    const sortedData = [...portfolioHistory].sort((a, b) => 
-      moment(a.date).valueOf() - moment(b.date).valueOf()
+    if (!portfolioHistory || portfolioHistory.length === 0) {
+      console.warn('No portfolio history available.');
+      setFilteredData([]);
+      return;
+    }
+
+    // Ensure proper parsing of dates and values
+    const processedData = portfolioHistory.map(item => ({
+      ...item,
+      performance_date: moment(item.performance_date).startOf('day'),
+      total_asset_value: parseFloat(item.total_asset_value) || 0,
+      cash_balance: parseFloat(item.cash_balance) || 0
+    }));
+
+    const sortedData = processedData.sort((a, b) =>
+      a.performance_date.valueOf() - b.performance_date.valueOf()
     );
 
-    const cutoffDate = moment().subtract(dateRange, 'days');
-    const filtered = sortedData.filter(item => 
-      moment(item.date).isAfter(cutoffDate)
+    const cutoffDate = moment().subtract(dateRange, 'days').startOf('day');
+    const filtered = sortedData.filter(item =>
+      item.performance_date.isAfter(cutoffDate)
     );
+
+    console.log('Processed and filtered data:', filtered);
     setFilteredData(filtered);
   }, [dateRange, portfolioHistory]);
 
@@ -36,7 +53,6 @@ const PerformanceGraph = ({ portfolioHistory }) => {
         type: 'time',
         time: {
           unit: 'day',
-          parser: 'YYYY-MM-DD',
           displayFormats: {
             day: 'MMM D'
           },
@@ -65,22 +81,6 @@ const PerformanceGraph = ({ portfolioHistory }) => {
         }
       }
     },
-    elements: {
-      line: {
-        tension: 0.3,
-        borderWidth: 2
-      },
-      point: {
-        radius: 0,
-        hitRadius: 10,
-        hoverRadius: 4
-      }
-    },
-    interaction: {
-      mode: 'nearest',
-      axis: 'x',
-      intersect: false
-    },
     plugins: {
       legend: {
         display: true,
@@ -106,44 +106,50 @@ const PerformanceGraph = ({ portfolioHistory }) => {
             return moment(context[0].raw.x).format('ddd, MMM D, YYYY');
           },
           label: function(context) {
-            const value = parseFloat(context.raw.y);
-            return `${context.dataset.label}: £${value.toLocaleString()}`;
+            return `${context.dataset.label}: £${context.raw.y.toLocaleString()}`;
           }
         }
       }
     }
   };
+  
   const chartData = {
     datasets: [
       {
         label: 'Total Portfolio',
         data: filteredData.map(item => ({
-          x: item.date, // Use ISO string
-          y: item.total_asset_value + item.cash_balance, // Sum values
+          x: item.performance_date.toDate(),
+          y: item.total_asset_value + item.cash_balance,
         })),
         borderColor: '#38d6b7',
         backgroundColor: 'rgba(56, 214, 183, 0.1)',
         fill: true,
+        tension: 0.4,  // Smooth curve
+        pointRadius: 0,  // Remove nodes
       },
       {
         label: 'Assets',
         data: filteredData.map(item => ({
-          x: item.date,
+          x: item.performance_date.toDate(),
           y: item.total_asset_value,
         })),
         borderColor: '#8b5cf6',
         backgroundColor: 'rgba(139, 92, 246, 0.1)',
         fill: true,
+        tension: 0.4,  // Smooth curve
+        pointRadius: 0,  // Remove nodes
       },
       {
         label: 'Cash',
         data: filteredData.map(item => ({
-          x: item.date,
+          x: item.performance_date.toDate(),
           y: item.cash_balance,
         })),
         borderColor: '#f59e0b',
         backgroundColor: 'rgba(245, 158, 11, 0.1)',
         fill: true,
+        tension: 0.4,  // Smooth curve
+        pointRadius: 0,  // Remove nodes
       },
     ],
   };
@@ -181,7 +187,13 @@ const PerformanceGraph = ({ portfolioHistory }) => {
       </div>
 
       <div className="h-64 relative">
-        <Line data={chartData} options={chartOptions} />
+        {filteredData.length > 0 ? (
+          <Line data={chartData} options={chartOptions} />
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            No data available for the selected period
+          </div>
+        )}
       </div>
     </div>
   );
