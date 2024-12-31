@@ -1,9 +1,9 @@
 
 const express = require('express');
 const router = express.Router();
-const pool = require('../database');
+const pool = require('../../database');
 
-router.get('/client-payments/:client_id', async (req, res) => {
+router.get('/:client_id', async (req, res) => {
     const { client_id } = req.params;
     try {
       const result = await pool.query(

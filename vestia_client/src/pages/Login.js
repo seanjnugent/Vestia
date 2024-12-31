@@ -10,7 +10,7 @@ const Login = () => {
     e.preventDefault();
   
     try {
-      const response = await fetch('http://localhost:5000/api/clients/login', {
+      const response = await fetch('http://localhost:5000/api/clients/postClientAuthentication', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email_address: email, password }),
@@ -45,7 +45,7 @@ const Login = () => {
     <div className="h-screen relative overflow-hidden">
       {/* Background with angle */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#ff6b6b] via-[#ffa500] to-[#ffff00]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#00836f] via-[#7fc1b7] to-[#146594]" />
         <div
           className="absolute bottom-0 left-0 bg-white"
           style={{
@@ -96,7 +96,7 @@ const Login = () => {
             </div>
             <button
               type="submit"
-              className="w-full px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-all"
+              className="w-full px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-400 transition-all"
             >
               Log In
             </button>

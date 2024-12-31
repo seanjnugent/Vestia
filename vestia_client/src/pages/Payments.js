@@ -30,13 +30,13 @@ const Payments = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/payments/client-payments/${storedClientId}`
+        `http://localhost:5000/api/payments/getClientPayments/${storedClientId}`
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       console.log("Received data:", data); // Debug log
       setOneOffPayments(Array.isArray(data) ? data : []);
@@ -79,7 +79,7 @@ const Payments = () => {
 
   const PaymentsTable = () => (
     <table className="w-full table-auto border-collapse bg-white rounded-lg shadow-sm">
-      <thead className="bg-purple-50">
+      <thead className="bg-[#f1f5f9]">
         <tr>
           <th className="px-6 py-3 text-left text-sm font-bold text-gray-700">Date</th>
           <th className="px-6 py-3 text-left text-sm font-bold text-gray-700">Type</th>
@@ -97,9 +97,9 @@ const Payments = () => {
           </tr>
         ) : (
           oneOffPayments.map((payment) => (
-            <tr key={payment.cash_trade_id} className="hover:bg-purple-50 transition">
+            <tr key={payment.cash_trade_id} className="hover:bg-[#f9fafb] transition">
               <td className="px-6 py-4 flex items-center text-gray-800">
-                <Calendar size={16} className="mr-2 text-purple-400" />
+                <Calendar size={16} className="mr-2 text-[#00836f]" />
                 {formatDate(payment.date_created)}
               </td>
               <td className="px-6 py-4 text-gray-800">{getPaymentType(payment.amount)}</td>
@@ -108,7 +108,7 @@ const Payments = () => {
               <td className="px-6 py-4 text-right">
                 <Link
                   to={`/payment-details/${payment.cash_trade_id}`}
-                  className="text-purple-600 hover:text-purple-900 flex items-center"
+                  className="text-[#00836f] hover:text-[#006a59] flex items-center"
                 >
                   View Details <ChevronRight size={16} />
                 </Link>
@@ -121,9 +121,9 @@ const Payments = () => {
   );
 
   return (
-    <div className="min-h-screen bg-white p-6 space-y-6">
+    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
       <div className="px-8 py-10">
-        <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
+        <h1 className="text-3xl font-semibold text-[#00836f]">
           Payments Dashboard
         </h1>
 
@@ -131,18 +131,18 @@ const Payments = () => {
         <section className="mb-12">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-semibold text-gray-800">Payment History</h2>
-            <button className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition duration-200">
+            <button className="bg-[#00836f] hover:bg-[#006a59] text-white font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition duration-200">
               <Plus size={18} /> <span>New Payment</span>
             </button>
           </div>
-          
+
           {error ? (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
               {error}
             </div>
           ) : isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00836f]"></div>
             </div>
           ) : (
             <PaymentsTable />
@@ -154,7 +154,7 @@ const Payments = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-semibold text-gray-800">Regular Payments</h2>
             <button
-              className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition duration-200"
+              className="bg-[#00836f] hover:bg-[#006a59] text-white font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition duration-200"
               onClick={() => navigate("/new-regular-payment")}
             >
               <Plus size={18} /> <span>New Regular Payment</span>
@@ -199,7 +199,7 @@ const Payments = () => {
                     <td className="px-6 py-4 text-right text-sm">
                       <Link
                         to={`/regular-deposit/${deposit.id}`}
-                        className="text-purple-600 hover:text-purple-900 flex items-center"
+                        className="text-[#00836f] hover:text-[#006a59] flex items-center"
                       >
                         View Details <ChevronRight size={16} />
                       </Link>

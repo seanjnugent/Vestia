@@ -26,9 +26,10 @@ const Documents = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white p-6 space-y-6">
-                <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
-                Documents</h1>
+    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
+      <h1 className="text-3xl font-semibold text-[#00836f]">
+        Documents
+      </h1>
 
       {/* Category Tabs */}
       <div className="flex space-x-4 mb-6">
@@ -37,7 +38,7 @@ const Documents = () => {
             key={category}
             className={`px-4 py-2 rounded-lg ${
               selectedCategory === category
-                ? "bg-blue-500 text-white"
+                ? "bg-[#00836f] text-white"
                 : "bg-gray-200 text-gray-700"
             }`}
             onClick={() => setSelectedCategory(category)}
@@ -85,7 +86,7 @@ const Documents = () => {
                   href={doc.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-500 underline mr-4"
+                  className="text-[#00836f] underline mr-4"
                 >
                   Preview
                 </a>

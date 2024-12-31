@@ -39,6 +39,7 @@
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^19.0.0",
     "react-spinners": "^0.15.0",
+    "styled-components": "^6.1.13",
     "tailwindcss-animate": "^1.0.7"
   }
 }

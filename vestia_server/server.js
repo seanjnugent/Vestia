@@ -7,16 +7,16 @@ app.use(cors());
 // Middleware
 app.use(express.json());
 
-// Import routes
-const clientRoutes = require('./routes/client');
-const accountRoutes = require('./routes/account');
-const tradeRoutes = require('./routes/trade');
-const paymentRoutes = require('./routes/payment');
-const assetRoutes = require('./routes/asset');
+// Import routes and dynamically register them
+const accountRoutes = require('./routes/accounts');
+const clientRoutes = require('./routes/clients');  // This should load /clients/postClientAuthentication.js as /clients/login
+const tradeRoutes = require('./routes/trades');
+const paymentRoutes = require('./routes/payments');
+const assetRoutes = require('./routes/assets');
 
-// Use routes
-app.use('/api/clients', clientRoutes);
+// Use the routes
 app.use('/api/accounts', accountRoutes);
+app.use('/api/clients', clientRoutes);  // This should now correctly register /clients/login
 app.use('/api/trades', tradeRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/assets', assetRoutes);
@@ -30,8 +30,6 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
-
-
 
 // Start server
 app.listen(port, () => {

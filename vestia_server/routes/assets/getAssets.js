@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../database');
+const pool = require('../../database');
 
 router.get('/assets/:asset_type?', async (req, res) => {
   const { asset_type } = req.params;

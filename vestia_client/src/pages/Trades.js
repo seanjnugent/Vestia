@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { ArrowUp, ArrowDown, PlusCircle, RefreshCw, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { Calendar } from "react-feather";
 
 const StatusBadge = ({ status }) => {
@@ -32,7 +32,7 @@ const formatDate = (isoString) => {
   }
 };
 
-const TradesTable = () => {
+const Trades = () => {
   const [trades, setTrades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -58,7 +58,7 @@ const TradesTable = () => {
       try {
         setLoading(true);
         const response = await fetch(
-          `http://localhost:5000/api/trades/client-trades/${clientId}`
+          `http://localhost:5000/api/trades/getClientAssetTrades/${clientId}`
         );
         if (!response.ok) {
           throw new Error("Failed to fetch trades");
@@ -155,7 +155,7 @@ const TradesTable = () => {
                   onClick={() => setCurrentPage(page)}
                   className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus:outline-offset-0 ${
                     currentPage === page
-                      ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                      ? "bg-[#00836f] text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00836f]"
                       : "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
                   }`}
                 >
@@ -178,25 +178,25 @@ const TradesTable = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <RefreshCw className="animate-spin h-8 w-8 text-indigo-600" />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <RefreshCw className="animate-spin h-8 w-8 text-[#00836f]" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-red-600">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-red-600">
         Error: {error}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white p-6 space-y-6">
+    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
+          <h1 className="text-3xl font-semibold text-[#00836f]">
             Trade History
           </h1>
           <div className="flex items-center space-x-4">
@@ -206,13 +206,13 @@ const TradesTable = () => {
                 placeholder="Search trades..."
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="pl-10 pr-4 py-2 rounded-xl border focus:ring-2 focus:ring-indigo-300 transition-all duration-300"
+                className="pl-10 pr-4 py-2 rounded-xl border focus:ring-2 focus:ring-[#00836f] transition-all duration-300"
               />
               <Filter className="absolute left-3 top-3 text-gray-400" />
             </div>
             <button
               onClick={() => navigate("/new-trade")}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl shadow-lg hover:scale-105 transition-all duration-300"
+              className="flex items-center gap-2 px-4 py-2 bg-[#00836f] text-white rounded-xl shadow-lg hover:scale-105 transition-all duration-300"
             >
               <PlusCircle size={18} /> New Trade
             </button>
@@ -220,8 +220,8 @@ const TradesTable = () => {
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-100 border-b">
+          <table className="w-full border-collapse bg-white">
+            <thead className="bg-[#f1f5f9]">
               <tr>
                 {[
                   { key: "date_created", label: "Date" },
@@ -234,7 +234,7 @@ const TradesTable = () => {
                   <th
                     key={key}
                     onClick={() => handleSort(key)}
-                    className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition-all duration-300"
+                    className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-b cursor-pointer hover:bg-gray-200 transition-all duration-300"
                   >
                     <div className="flex items-center gap-2">
                       {label}
@@ -253,25 +253,25 @@ const TradesTable = () => {
               {paginatedTrades.map((trade) => (
                 <tr
                   key={trade.asset_trade_id}
-                  className="hover:bg-indigo-50 transition-all duration-300 border-b last:border-b-0"
+                  className="hover:bg-[#f9fafb] border-b last:border-b-0"
                 >
-                  <td className="px-6 py-4 flex items-center text-gray-800">
-                    <Calendar size={16} className="mr-2 text-purple-400" />
+                  <td className="px-4 py-3 flex items-center text-gray-800">
+                    <Calendar size={16} className="mr-2 text-[#00836f]" />
                     {formatDate(trade.date_created)}
                   </td>
-                  <td className="px-6 py-4">{trade.asset_code}</td>
-                  <td className="px-6 py-4">{trade.asset_trade_quantity}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3">{trade.asset_code}</td>
+                  <td className="px-4 py-3">{trade.asset_trade_quantity}</td>
+                  <td className="px-4 py-3">
                     £
                     {Number(trade.asset_trade_cost).toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3">
                     <StatusBadge status={trade.asset_trade_status} />
                   </td>
-                  <td className="px-6 py-4">{trade.asset_trade_note || "-"}</td>
+                  <td className="px-4 py-3">{trade.asset_trade_note || "-"}</td>
                 </tr>
               ))}
             </tbody>
@@ -282,7 +282,7 @@ const TradesTable = () => {
               No trades found 🕹️
             </div>
           )}
-          
+
           <Pagination />
         </div>
       </div>
@@ -290,4 +290,4 @@ const TradesTable = () => {
   );
 };
 
-export default TradesTable;
+export default Trades;

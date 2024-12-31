@@ -32,9 +32,21 @@ ChartJS.register(
     Legend
 );
 
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+);
+
 const Home = () => {
     const navigate = useNavigate();
     const [clientData, setClientData] = useState(null);
+    const [performanceData, setPerformanceData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -46,7 +58,8 @@ const Home = () => {
                     throw new Error('No user ID found');
                 }
 
-                const response = await fetch(`http://localhost:5000/api/clients/client-performance/${userId}`);
+                // Fetching client summary data
+                const response = await fetch(`http://localhost:5000/api/clients/getClientSummary/${userId}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch client data');
                 }
@@ -64,12 +77,44 @@ const Home = () => {
         fetchClientData();
     }, []);
 
-    const data = {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+    useEffect(() => {
+        const fetchPerformanceData = async () => {
+            try {
+                const userId = localStorage.getItem('userId');
+                if (!userId) {
+                    throw new Error('No user ID found');
+                }
+
+                // Fetching performance data
+                const today = new Date();
+                const ninetyDaysAgo = new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000);
+        
+                const endDate = today.toISOString().split("T")[0]; // YYYY-MM-DD format
+                const startDate = ninetyDaysAgo.toISOString().split("T")[0];
+        
+                const response = await fetch(`http://localhost:5000/api/clients/getClientPerformance/${userId}?start_date=${startDate}&end_date=${endDate}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch performance data');
+                }
+
+                const data = await response.json();
+                setPerformanceData(data); // Storing the performance data
+            } catch (err) {
+                setError(err.message);
+                console.error('Error fetching performance data:', err);
+            }
+        };
+
+        fetchPerformanceData();
+    }, []);
+
+    // Prepare the data for the graph
+    const graphData = {
+        labels: performanceData.map(item => item.performance_date), // x-axis: performance_date
         datasets: [
             {
                 label: 'Portfolio Value (£)',
-                data: [2000, 2200, 2300, 2400, 2450, 2500, clientData?.total_client_value || 2540],
+                data: performanceData.map(item => parseFloat(item.total_asset_value) + parseFloat(item.cash_balance)), // y-axis: sum of total_asset_value and cash_balance
                 borderColor: '#38d6b7',
                 backgroundColor: 'rgba(56, 214, 183, 0.2)',
                 tension: 0.4,
@@ -98,6 +143,15 @@ const Home = () => {
                 grid: {
                     display: false,
                 },
+                ticks: {
+                    autoSkip: true, // Automatically skip some labels to avoid overlap
+                    maxTicksLimit: 10, // Limit number of ticks to avoid overcrowding
+                    callback: function(value) {
+                        // Convert datetime to a more user-friendly format
+                        const date = new Date(value);
+                        return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+                    }
+                }
             },
             y: {
                 grid: {
@@ -144,16 +198,17 @@ const Home = () => {
     return (
         <div className="min-h-screen bg-white font-sans">
             <div className="max-w-7xl mx-auto py-12 px-6 lg:px-8 space-y-12">
-                <div className="md:flex md:items-center md:justify-between">
-                    <div>
-                    <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
-
-                            Welcome, {clientData?.first_name || 'User'}
-                        </h1>
-                        <p className="mt-1 text-xl text-gray-600">Your investment overview</p>
-                    </div>
-                </div>
-
+            <div className="md:flex md:items-center md:justify-between">
+  <div>
+    <h1 
+      className="text-4xl font-bold" 
+      style={{ color: '#00836f' }} 
+    > 
+      Welcome, {clientData?.first_name || 'User'}
+    </h1>
+    <p className="mt-1 text-xl text-gray-600">Your investment overview</p>
+  </div>
+</div>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -175,7 +230,7 @@ const Home = () => {
                             </div>
                         </div>
                         <div className="h-72 relative">
-                            <Line data={data} options={options} />
+                            <Line data={graphData} options={options} />
                         </div>
                     </motion.div>
 
@@ -193,9 +248,9 @@ const Home = () => {
                         />
                         <ActionButton
                             icon={PiggyBank}
-                            title="New Payment"
-                            description="Deposit or withdraw funds"
-                            onClick={() => navigate("/new-payment")}
+                            title="Deposit Funds"
+                            description="Add funds to your portfolio"
+                            onClick={() => navigate("/deposit")}
                         />
                     </motion.div>
                 </div>
@@ -205,3 +260,4 @@ const Home = () => {
 };
 
 export default Home;
+

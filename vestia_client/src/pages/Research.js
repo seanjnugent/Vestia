@@ -4,26 +4,26 @@ import { Link } from 'react-router-dom';
 
 const Research = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   const researchCategories = [
-    { 
-      title: 'Stocks', 
-      icon: <TrendingUp className="w-12 h-12 text-blue-500" />,
+    {
+      title: 'Stocks',
+      icon: <TrendingUp className="w-12 h-12 text-[#00836f]" />,
       description: 'Explore and analyze top-performing companies',
       link: '/research/stocks'
     },
-    { 
-      title: 'ETFs & Funds', 
-      icon: <PieChart className="w-12 h-12 text-green-500" />,
+    {
+      title: 'ETFs & Funds',
+      icon: <PieChart className="w-12 h-12 text-[#00836f]" />,
       description: 'Discover a selection of diversified investment options',
       link: '/research/funds'
     },
-    { 
-      title: 'Crypto', 
-      icon: <Globe className="w-12 h-12 text-purple-500" />,
+    {
+      title: 'Crypto',
+      icon: <Globe className="w-12 h-12 text-[#00836f]" />,
       description: 'Gain insights into the growing digital asset market',
       link: '/research/crypto'
-    }    
+    }
   ];
 
   const topNews = [
@@ -50,7 +50,7 @@ const Research = () => {
   const performanceWidgets = [
     {
       title: 'Market Movers',
-      icon: <Award className="w-6 h-6 text-yellow-500" />,
+      icon: <Award className="w-6 h-6 text-[#00836f]" />,
       data: [
         { name: 'Apple', symbol: 'AAPL', change: '+2.5%', price: '$180.50' },
         { name: 'Microsoft', symbol: 'MSFT', change: '+3.0%', price: '$315.40' }
@@ -58,7 +58,7 @@ const Research = () => {
     },
     {
       title: 'Watchlist Performance',
-      icon: <Star className="w-6 h-6 text-blue-500" />,
+      icon: <Star className="w-6 h-6 text-[#00836f]" />,
       data: [
         { name: 'Tesla', symbol: 'TSLA', change: '+1.8%', price: '$240.20' },
         { name: 'NVIDIA', symbol: 'NVDA', change: '+4.2%', price: '$450.75' }
@@ -67,10 +67,10 @@ const Research = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white p-6 space-y-6">
+    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
+        <h1 className="text-3xl font-semibold text-[#00836f]">
           Research Dashboard
         </h1>
         <div className="relative w-96">
@@ -79,7 +79,7 @@ const Research = () => {
             placeholder="Search stocks, ETFs, news..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-3 pl-10 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            className="w-full px-4 py-3 pl-10 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#00836f] transition-all"
           />
           <Search className="absolute left-3 top-3.5 text-gray-400" />
         </div>
@@ -96,7 +96,7 @@ const Research = () => {
               </div>
               <p className="text-gray-600">{category.description}</p>
               <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-blue-500 font-semibold">Explore →</span>
+                <span className="text-[#00836f] font-semibold">Explore →</span>
               </div>
             </div>
           </Link>
@@ -108,8 +108,8 @@ const Research = () => {
         {/* Performance Widgets */}
         <div className="col-span-2 space-y-6">
           {performanceWidgets.map((widget, index) => (
-            <div 
-              key={index} 
+            <div
+              key={index}
               className="bg-white p-6 rounded-xl shadow-md"
             >
               <div className="flex items-center mb-4">
@@ -118,8 +118,8 @@ const Research = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 {widget.data.map((stock, stockIndex) => (
-                  <div 
-                    key={stockIndex} 
+                  <div
+                    key={stockIndex}
                     className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex justify-between">
@@ -149,16 +149,16 @@ const Research = () => {
           </div>
           <div className="space-y-4">
             {topNews.map((news, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 <h3 className="font-semibold text-gray-800 mb-1">{news.title}</h3>
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>{news.source}</span>
-                  <span 
+                  <span
                     className={`
-                      ${news.sentiment === 'positive' ? 'text-green-500' : 
+                      ${news.sentiment === 'positive' ? 'text-green-500' :
                         news.sentiment === 'negative' ? 'text-red-500' : 'text-gray-500'}
                     `}
                   >
