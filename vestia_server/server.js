@@ -13,6 +13,7 @@ const clientRoutes = require('./routes/clients');  // This should load /clients/
 const tradeRoutes = require('./routes/trades');
 const paymentRoutes = require('./routes/payments');
 const assetRoutes = require('./routes/assets');
+const managedPortfolioRoutes = require('./routes/managed-portfolios');
 
 // Use the routes
 app.use('/api/accounts', accountRoutes);
@@ -20,6 +21,7 @@ app.use('/api/clients', clientRoutes);  // This should now correctly register /c
 app.use('/api/trades', tradeRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/assets', assetRoutes);
+app.use('/api/managed-portfolios', managedPortfolioRoutes);
 
 app.get('/test', (req, res) => {
   res.json({ message: 'Server is working' });

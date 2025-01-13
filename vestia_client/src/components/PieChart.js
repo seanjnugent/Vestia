@@ -1,6 +1,19 @@
 import React from 'react';
 import { Pie } from 'react-chartjs-2';
-import { Sparkles } from 'lucide-react';
+import { PieChart as PieChartIcon } from 'lucide-react';
+
+const baseColors = [
+  'rgba(56, 214, 183, 0.7)',  // teal (matching the line graph)
+  'rgba(217, 56, 108, 0.7)',  // complementary pink/red
+  'rgba(56, 107, 214, 0.7)',  // complementary blue
+  'rgba(214, 203, 56, 0.7)',  // complementary gold
+  'rgba(245, 158, 11, 0.7)',  // amber
+  'rgba(99, 102, 241, 0.7)',  // indigo
+  'rgba(252, 96, 176, 0.7)',  // bright magenta
+  'rgba(251, 146, 60, 0.7)',  // orange
+  'rgba(52, 211, 153, 0.7)',  // emerald (similar tone)
+];
+
 
 const getRandomColor = () => {
   const r = Math.floor(Math.random() * 256);
@@ -9,19 +22,7 @@ const getRandomColor = () => {
   return `rgba(${r}, ${g}, ${b}, 0.7)`;
 };
 
-const baseColors = [
-  'rgba(236, 72, 153, 0.7)',  // pink
-  'rgba(139, 92, 246, 0.7)',  // violet
-  'rgba(56, 214, 183, 0.7)',  // teal
-  'rgba(245, 158, 11, 0.7)',  // amber
-  'rgba(99, 102, 241, 0.7)',  // indigo
-  'rgba(248, 113, 113, 0.7)', // red
-  'rgba(52, 211, 153, 0.7)',  // emerald
-  'rgba(251, 146, 60, 0.7)',  // orange
-];
-
-const PieChart = ({ data }) => {
-  // Generate colors array based on number of data points
+const PieChart = ({ data, title = 'Holdings Distribution' }) => {
   const generateColors = (length) => {
     let colors = [...baseColors];
     if (length > baseColors.length) {
@@ -33,6 +34,9 @@ const PieChart = ({ data }) => {
   };
 
   const colors = generateColors(data.labels.length);
+
+  // Calculate total value for percentage in title
+  const totalValue = data.datasets[0].data.reduce((sum, value) => sum + parseFloat(value), 0);
 
   const enhancedData = {
     labels: data.labels,
@@ -55,20 +59,22 @@ const PieChart = ({ data }) => {
           usePointStyle: true,
           padding: 20,
           font: {
+            family: '-apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto',
             size: 12,
-            family: "'Inter', sans-serif",
+            weight: 500
           },
-          color: '#6b7280',
+          color: '#94a3b8',
         },
       },
       tooltip: {
         backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        titleColor: '#111827',
-        bodyColor: '#4b5563',
-        borderColor: '#e5e7eb',
+        titleColor: '#0f172a',
+        bodyColor: '#0f172a',
+        borderColor: '#e2e8f0',
         borderWidth: 1,
-        padding: 12,
         cornerRadius: 8,
+        padding: 12,
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
         displayColors: true,
         boxPadding: 4,
         callbacks: {
@@ -77,7 +83,7 @@ const PieChart = ({ data }) => {
             const sum = context.dataset.data
               .reduce((a, b) => parseFloat(a) + parseFloat(b), 0);
             const percentage = ((value / sum) * 100).toFixed(1);
-            return `${context.label}: £${value.toLocaleString(undefined, {
+            return `${context.label}: £${value.toLocaleString('en-GB', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2
             })} (${percentage}%)`;
@@ -103,16 +109,24 @@ const PieChart = ({ data }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
-      <div className="flex items-center gap-2 mb-6">
-        <h2 className="text-xl font-semibold bg-gradient-to-r from-pink-500 to-violet-500 text-transparent bg-clip-text">
-          Holdings Distribution
-        </h2>
-        <Sparkles className="w-5 h-5 text-pink-500" />
+    <div className="bg-white rounded-2xl shadow-lg p-8 relative">
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <PieChartIcon className="text-[#38d6b7] w-6 h-6" />
+            {title}
+          </h2>
+        </div>
       </div>
       
-      <div className="h-64 relative">
-        <Pie data={enhancedData} options={options} />
+      <div className="h-72 relative mb-6">
+        {data.labels.length > 0 ? (
+          <Pie data={enhancedData} options={options} />
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            No data available
+          </div>
+        )}
       </div>
     </div>
   );
