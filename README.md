@@ -63,8 +63,8 @@ The client-facing application for investors.
 - Real-time trading functionality.
 - Insights into account performance and investment trends.
 
-Future plans to share components across admin and client sites
----
+**Future plans to share components across admin and client sites
+**---
 
 ### 4. vestia_server
 Node.js-based server providing various APIs for managing accounts, assets, clients, payments, trades, and managed portfolios. The server dynamically creates endpoints for each feature, making it scalable and easy to manage.
