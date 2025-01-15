@@ -1,19 +1,17 @@
 import React from 'react';
 import { Pie } from 'react-chartjs-2';
-import { PieChart as PieChartIcon } from 'lucide-react';
 
 const baseColors = [
-  'rgba(56, 214, 183, 0.7)',  // teal (matching the line graph)
-  'rgba(217, 56, 108, 0.7)',  // complementary pink/red
-  'rgba(56, 107, 214, 0.7)',  // complementary blue
-  'rgba(214, 203, 56, 0.7)',  // complementary gold
-  'rgba(245, 158, 11, 0.7)',  // amber
-  'rgba(99, 102, 241, 0.7)',  // indigo
-  'rgba(252, 96, 176, 0.7)',  // bright magenta
-  'rgba(251, 146, 60, 0.7)',  // orange
-  'rgba(52, 211, 153, 0.7)',  // emerald (similar tone)
+  'rgba(56, 214, 183, 0.7)',  // teal
+  'rgba(217, 56, 108, 0.7)',   // pink/red
+  'rgba(56, 107, 214, 0.7)',   // blue
+  'rgba(214, 203, 56, 0.7)',   // gold
+  'rgba(245, 158, 11, 0.7)',   // amber
+  'rgba(99, 102, 241, 0.7)',   // indigo
+  'rgba(252, 96, 176, 0.7)',   // magenta
+  'rgba(251, 146, 60, 0.7)',   // orange
+  'rgba(52, 211, 153, 0.7)',   // emerald
 ];
-
 
 const getRandomColor = () => {
   const r = Math.floor(Math.random() * 256);
@@ -22,7 +20,7 @@ const getRandomColor = () => {
   return `rgba(${r}, ${g}, ${b}, 0.7)`;
 };
 
-const PieChart = ({ data, title = 'Holdings Distribution' }) => {
+const PieChart = ({ data }) => {
   const generateColors = (length) => {
     let colors = [...baseColors];
     if (length > baseColors.length) {
@@ -35,16 +33,13 @@ const PieChart = ({ data, title = 'Holdings Distribution' }) => {
 
   const colors = generateColors(data.labels.length);
 
-  // Calculate total value for percentage in title
-  const totalValue = data.datasets[0].data.reduce((sum, value) => sum + parseFloat(value), 0);
-
   const enhancedData = {
     labels: data.labels,
     datasets: [{
       data: data.datasets[0].data.map(value => Number(value).toFixed(2)),
       backgroundColor: colors,
       hoverBackgroundColor: colors.map(color => color.replace('0.7', '0.9')),
-      borderWidth: 2,
+      borderWidth: 1,
       borderColor: '#ffffff',
     }]
   };
@@ -57,13 +52,12 @@ const PieChart = ({ data, title = 'Holdings Distribution' }) => {
         position: 'bottom',
         labels: {
           usePointStyle: true,
-          padding: 20,
+          padding: 10,
           font: {
-            family: '-apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto',
             size: 12,
             weight: 500
           },
-          color: '#94a3b8',
+          color: '#6b7280', // Changed to a slightly darker shade for better readability
         },
       },
       tooltip: {
@@ -80,13 +74,9 @@ const PieChart = ({ data, title = 'Holdings Distribution' }) => {
         callbacks: {
           label: (context) => {
             const value = parseFloat(context.raw);
-            const sum = context.dataset.data
-              .reduce((a, b) => parseFloat(a) + parseFloat(b), 0);
+            const sum = context.dataset.data.reduce((a, b) => parseFloat(a) + parseFloat(b), 0);
             const percentage = ((value / sum) * 100).toFixed(1);
-            return `${context.label}: £${value.toLocaleString('en-GB', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2
-            })} (${percentage}%)`;
+            return `${context.label}: ${value}% (${percentage}%)`;
           },
         },
       },
@@ -99,27 +89,18 @@ const PieChart = ({ data, title = 'Holdings Distribution' }) => {
     },
     elements: {
       arc: {
-        borderWidth: 2,
+        borderWidth: 1,
         borderColor: '#ffffff',
         hoverBorderColor: '#ffffff',
-        hoverBorderWidth: 3,
-        hoverOffset: 8,
+        hoverBorderWidth: 2,
+        hoverOffset: 4,
       },
     },
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-8 relative">
-      <div className="flex justify-between items-start mb-8">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-            <PieChartIcon className="text-[#38d6b7] w-6 h-6" />
-            {title}
-          </h2>
-        </div>
-      </div>
-      
-      <div className="h-72 relative mb-6">
+    <div className="relative">
+      <div className="h-64 w-full">
         {data.labels.length > 0 ? (
           <Pie data={enhancedData} options={options} />
         ) : (

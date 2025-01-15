@@ -2,8 +2,9 @@ import React, { useState, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ProgressTracker from '../components/ProgressTracker';
 import ManagedPortfolioList from '../components/ManagedPortfolioList';
-import ManagedPortfolioDetails from '../components/ManagedPortfolioDetails';
 import ActionButton from '../components/ActionButton';
+import ReviewSection from '../components/ReviewSection';
+import { useNavigate } from 'react-router-dom';
 
 const NewAccount = () => {
   const [step, setStep] = useState(1);
@@ -14,16 +15,17 @@ const NewAccount = () => {
     managedPortfolio: null,
   });
 
+  const navigate = useNavigate();
+
   const updateAccount = useCallback((updates) => {
-    console.log('Updating account:', updates);
     setAccount((prev) => ({ ...prev, ...updates }));
   }, []);
 
   const handleNext = useCallback(() => {
-    if (step < 5) {
+    if (step < 4) {
       setStep((prev) => prev + 1);
     } else {
-      alert('Account Created Successfully!');
+      submitAccountData();
     }
   }, [step]);
 
@@ -35,10 +37,40 @@ const NewAccount = () => {
     if (step === 2) {
       return account.portfolioType !== '';
     }
-    if (step === 3 || step === 4) {
-      return account.name && account.name.trim().length > 0;
+    if (step === 3) {
+      return account.name || account.managedPortfolio;
     }
     return true;
+  };
+
+  const submitAccountData = async () => {
+    try {
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        throw new Error('User ID not found');
+      }
+
+      const response = await fetch('http://localhost:5000/api/accounts/postNewAccount', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          client_id: userId,
+          account_type: account.type,
+          account_name: account.name || account.managedPortfolio?.managed_portfolio_name,
+          managed_portfolio_id: account.managedPortfolio?.managed_portfolio_id || null,
+        }),
+      });
+
+      const data = await response.json();
+      console.log(data);
+      alert('Account created successfully!');
+      navigate('/home');
+    } catch (error) {
+      console.error(error);
+      alert('Error creating account. Please try again.');
+    }
   };
 
   const renderStepContent = () => {
@@ -49,13 +81,9 @@ const NewAccount = () => {
             {['General Investment Account', 'Individual Savings Account (ISA)', 'SIPP/Pension'].map((type) => (
               <button
                 key={type}
-                onClick={() => {
-                  updateAccount({ type });
-                  handleNext();
-                }}
-                className={`w-full py-4 px-6 rounded-lg shadow-md transition-all duration-300 
-                  ${account.type === type ? 'bg-indigo-500 text-white' : 'bg-white text-gray-800 border border-gray-300 hover:bg-indigo-50'}
-                `}
+                onClick={() => { updateAccount({ type }); handleNext(); }}
+                className={`w-full py-3 px-6 rounded-lg text-center transition-colors duration-300
+                ${account.type === type ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-indigo-100'}`}
               >
                 {type}
               </button>
@@ -71,9 +99,8 @@ const NewAccount = () => {
                 <button
                   key={type}
                   onClick={() => updateAccount({ portfolioType: type })}
-                  className={`w-full py-4 px-6 rounded-lg shadow-md transition-all duration-300 
-                    ${account.portfolioType === type ? 'bg-indigo-500 text-white' : 'bg-white text-gray-800 border border-gray-300 hover:bg-indigo-50'}
-                  `}
+                  className={`w-full py-3 px-6 rounded-lg text-center transition-colors duration-300
+                  ${account.portfolioType === type ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-indigo-100'}`}
                 >
                   {type}
                 </button>
@@ -97,17 +124,8 @@ const NewAccount = () => {
           </div>
         );
       case 4:
-        return account.managedPortfolio ? (
-          <ManagedPortfolioDetails portfolio={account.managedPortfolio} />
-        ) : (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-gray-800">Review Account Details</h2>
-            <div className="bg-white p-5 rounded-lg shadow-sm">
-              <p><strong>Name:</strong> {account.name}</p>
-              <p><strong>Type:</strong> {account.type}</p>
-              <p><strong>Portfolio:</strong> {account.portfolioType}</p>
-            </div>
-          </div>
+        return (
+          <ReviewSection account={account} />
         );
       default:
         return null;
@@ -115,9 +133,9 @@ const NewAccount = () => {
   };
 
   return (
-    <div className="flex justify-center py-10 px-4 min-h-screen bg-gray-100">
-      <div className="max-w-3xl w-full bg-white shadow-xl rounded-3xl p-10 space-y-6">
-        <ProgressTracker currentStep={step} steps={['Type', 'Portfolio', 'Details', 'Review', 'Confirmation']} />
+    <div className="flex justify-center min-h-screen bg-gray-100 py-10">
+      <div className="max-w-2xl w-full bg-white shadow-xl rounded-3xl p-8 space-y-6">
+        <ProgressTracker currentStep={step} steps={['Type', 'Portfolio', 'Details', 'Review']} />
         <div>{renderStepContent()}</div>
         <div className="flex justify-between">
           <ActionButton
@@ -125,16 +143,14 @@ const NewAccount = () => {
             disabled={step === 1}
             icon={ChevronLeft}
             title="Back"
-            description=""
-            className="shadow-lg"
+            className="w-1/2 max-w-xs bg-white text-indigo-600 border border-indigo-600 hover:bg-indigo-50"
           />
           <ActionButton
             onClick={handleNext}
             disabled={!isStepComplete()}
             icon={ChevronRight}
-            title={step === 5 ? 'Finish' : 'Next'}
-            description=""
-            className="shadow-lg"
+            title={step === 4 ? 'Finish' : 'Next'}
+            className="w-1/2 max-w-xs bg-indigo-600 text-white hover:bg-indigo-700"
           />
         </div>
       </div>

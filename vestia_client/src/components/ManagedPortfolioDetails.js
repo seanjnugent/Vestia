@@ -1,7 +1,20 @@
 import React from 'react';
+import PieChart from './PieChart'; // Make sure this path is correct based on your file structure
 
 const ManagedPortfolioDetails = ({ portfolio }) => {
-  const { strategy, description, allocation } = portfolio;
+  if (!portfolio) return <div className="text-center">Loading...</div>;
+
+  const { strategy, description } = portfolio.managed_portfolio_details;
+  const { allocation } = portfolio;
+
+  // Data preparation for the pie chart
+  const pieData = {
+    labels: Object.keys(allocation),
+    datasets: [{
+      data: Object.values(allocation),
+      label: 'Allocation Percentage',
+    }],
+  };
 
   return (
     <div className="space-y-4">
@@ -11,14 +24,16 @@ const ManagedPortfolioDetails = ({ portfolio }) => {
         <p className="text-sm text-gray-500">{description}</p>
         <div className="mt-4">
           <h4 className="text-md font-medium text-gray-700">Allocation:</h4>
-          <ul className="list-disc list-inside">
-            {Object.entries(allocation).map(([key, value]) => (
-              <li key={key} className="text-sm text-gray-500">
-                {key}: {value}%
-              </li>
-            ))}
-          </ul>
-        </div>
+          <PieChart 
+  data={{
+    labels: Object.keys(allocation),
+    datasets: [{
+      data: Object.values(allocation),
+      label: 'Allocation Percentage',
+    }],
+  }}
+  title="Portfolio Allocation"
+/>        </div>
       </div>
     </div>
   );

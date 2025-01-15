@@ -15,18 +15,19 @@ const ProgressTracker = ({ currentStep, steps }) => {
       ? 100
       : 0;
 
+
   return (
-    <div className="relative mb-8 px-4">
-      <div className="w-full h-2 bg-gray-300 rounded-full">
+    <div className="relative mb-8 px-4 w-full">
+      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden"> {/* Added overflow hidden */}
         <div
-          className="h-2 bg-gradient-to-r from-[#ff6b6b] via-[#ffa500] to-[#ffff00] rounded-full transition-all duration-300"
+          className="h-full bg-gradient-to-r from-teal-500 to-blue-500 rounded-full transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
-
-      <div className="flex items-center justify-between absolute top-0 left-0 right-0 -mt-6 w-full">
-
-      </div>
+      {numSteps > 1 && ( // Only render markers if there's more than one step
+        <div className="flex items-center justify-between absolute top-0 left-0 right-0 -mt-2 w-full">
+        </div>
+      )}
     </div>
   );
 };

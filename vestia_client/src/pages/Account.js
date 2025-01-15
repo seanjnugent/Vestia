@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Sparkles, PlusCircle, History, PiggyBank, Wallet, RefreshCw } from 'lucide-react';
+import { Sparkles, PlusCircle, History, PiggyBank, Wallet, RefreshCw, PieChart as PieChartIcon } from 'lucide-react';
 import PerformanceGraph from '../components/PerformanceGraph';
 import { BeatLoader } from 'react-spinners';
 import PieChart from '../components/PieChart';
@@ -31,30 +31,30 @@ const Account = () => {
           fetch(`http://localhost:5000/api/accounts/getAccountHoldings/${id}`),
         ]);
 
-        if (!accountResponse.ok || !historyResponse.ok) {
-          throw new Error('Failed to fetch data');
+        if (!accountResponse.ok) {
+          throw new Error('Failed to fetch account data');
         }
 
-        const [accountData, historyData] = await Promise.all([
-          accountResponse.json(),
-          historyResponse.json(),
-        ]);
+        const accountData = await accountResponse.json();
+        setAccountDetails(accountData[0]);
 
-        let holdingsData = [];
+        if (historyResponse.ok) {
+          const historyData = await historyResponse.json();
+          setPortfolioHistory(Array.isArray(historyData) ? historyData : []);
+        } else if (historyResponse.status === 404) {
+          console.warn(`No performance data found for account ID: ${id}`);
+        } else {
+          throw new Error('Failed to fetch performance data');
+        }
+
         if (holdingsResponse.ok) {
-          holdingsData = await holdingsResponse.json();
+          const holdingsData = await holdingsResponse.json();
+          setHoldings(holdingsData);
         } else if (holdingsResponse.status === 404) {
           console.warn(`No holdings found for account ID: ${id}`);
         } else {
           throw new Error('Failed to fetch holdings data');
         }
-
-        if (Array.isArray(accountData) && accountData.length > 0) {
-          setAccountDetails(accountData[0]);
-        }
-
-        setPortfolioHistory(Array.isArray(historyData) ? historyData : []);
-        setHoldings(holdingsData);
       } catch (err) {
         setError(err.message);
         console.error('Error fetching data:', err);
@@ -112,7 +112,7 @@ const Account = () => {
       },
     ],
   };
-  
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="bg-white rounded-2xl shadow-lg p-8">
@@ -207,7 +207,13 @@ const Account = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {portfolioHistory.length > 0 ? (
-          <PerformanceGraph portfolioHistory={portfolioHistory} title="Account Performance" />
+          <div className="bg-white rounded-2xl shadow-lg p-8">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2 mb-4">
+              <History size={24} className="text-[#38d6b7]" />
+              Account Performance
+            </h2>
+            <PerformanceGraph portfolioHistory={portfolioHistory} />
+          </div>
         ) : (
           <div className="col-span-2 bg-white rounded-2xl shadow-lg p-8 text-center">
             <h2 className="text-xl font-semibold text-gray-600 mb-4">Performance Graph Not Available</h2>
@@ -217,13 +223,33 @@ const Account = () => {
 
         {holdings.length > 0 ? (
           <>
-            <HoldingsTable holdings={holdings} />
-            <PieChart data={pieData} />
+            <div className="bg-white rounded-2xl shadow-lg p-8">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2 mb-4">
+                <Sparkles size={24} className="text-[#38d6b7]" />
+                Holdings Detail
+              </h2>
+              <HoldingsTable holdings={holdings} />
+            </div>
+            <div className="bg-white rounded-2xl shadow-lg p-8">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2 mb-4">
+                <PieChartIcon size={24} className="text-[#38d6b7]" />
+                Portfolio Allocation
+              </h2>
+              <PieChart
+                data={pieData}
+              />
+            </div>
           </>
         ) : (
           <div className="col-span-2 text-center bg-white rounded-2xl shadow-lg p-8">
             <h2 className="text-xl font-semibold mb-4 text-gray-900">No Holdings</h2>
             <p className="text-gray-600">This account currently has no holdings to display.</p>
+            <button
+              onClick={() => navigate('/new-payment/one-off')}
+              className="mt-4 px-4 py-2 bg-[#38d6b7] text-white rounded-md hover:bg-[#2bb29b] transition-all duration-300 shadow-md hover:shadow-lg text-sm"
+            >
+              Deposit Now
+            </button>
           </div>
         )}
       </div>
