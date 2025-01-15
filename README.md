@@ -1,82 +1,110 @@
-# Vestia: Data Engineering Testing on Minimal Hardware
+# Vestia Platform
 
-**Vestia** is a testing ground for some data engineering tools with minimal hardware and performance in mind. The goal is to load-test PostgreSQL databases via automation and scheduling on a Raspberry Pi Model B from 2012 which I couldn't bring myself to throw out and wanted to do something on it. Over time, this will extend to big data, data streaming and governance tools (on more powerful hardware).
+Vestia started as a sandbox to test some data engineering tools but has grown into something more elaborate. Originally focused on experimenting with Apache Airflow, it now includes a UI and will eventually incorporate Spark and Kafka to explore how they can handle large-scale data processing and real-time streams of price data. Here’s the current breakdown:
 
----
-
-## Project Overview
-
-This project simulates a trading app—think Trading 212 or Robinhood—but for now, it's focused on database-level operations. I’ve dabbled with a React frontend but scrapped it in favor of having more fun generating test data.
+1. **vestia_admin** - A UI for managing accounts, clients, assets and other platform wide operations.
+2. **vestia_automation** - Airflow DAGs for scheduled operations and tasks such as caching, updates and performance calculations.
+3. **vestia_client** - A client-facing app where investors can track portfolios, make trades and get performance insights.
+4. **vestia_server** - A backend server providing APIs for accounts, clients, trades, payments, and more.
 
 ---
 
 ## Folder Structure
 
-### `.github/workflows`
-Contains GitHub Actions workflows for automation.  
-- **`deploy_automation_scripts.yml`**: Deploys files from the repo to the Raspberry Pi and installs the `crontab`.
+### 1. vestia_admin
+The administrative interface for managing the platform.
 
-### `Automation`
-Python scripts for automating tasks related to assets, clients, and trades.  
-- **`ext_` scripts**: Handle external data import.
-- **`tst_` scripts**: Generate test data.
+#### Key Directories:
+- **`src/`**
+  Main application code.
+  - **`components/`**
+    Reusable UI components like tables, modals, and forms.
+  - **`pages/`**
+    Specific pages for features like account management, trade history, and performance tracking.
 
-**Key Scripts:**
-- `ext_insert_assets.py`: Inserts asset data.  
-- `ext_update_prices.py`: Updates asset prices.  
-- `tst_manufacture_clients.py`: Manufactures dummy client data for testing.  
-
-### `Database`
-SQL scripts for defining and managing the database.  
-- **Key File:**  
-  - `Schema.sql`: Defines the database schema for the project.
-
-### `Scheduling`
-Contains crontab configuration for task scheduling on the Raspberry Pi.  
-- **Key File:**  
-  - `crontab.txt`: Specifies scheduled jobs to run automation scripts on the Pi.
-
-### Miscellaneous Files
-- **`env_template.txt`**: A template for `.env` to guide setting up environment variables.
+#### Features:
+- Manage accounts and trades.
+- Track detailed client performance.
+- Dashboards with admin-level analytics.
 
 ---
 
-## How It Works
+### 2. vestia_automation
+Airflow DAGs for backend automation.
 
-### **Automation Scripts:**
-1. Write Python scripts in the `Automation` folder to manage data operations.
+#### Key Directories:
+- **`dags/`**
+  Airflow DAGs for tasks like:
+  - Caching account and client performance data.
+  - Updating daily prices.
+  - Generating test data for trades and accounts.
 
-### **Task Scheduling:**
-1. Use `crontab.txt` to define jobs for the Raspberry Pi.  
-2. Scheduled tasks run the automation scripts periodically.
+#### Features:
+- Automates recurring updates and performance calculations.
+- Syncs data in real-time with the backend.
 
-### **GitHub Actions:**
-The **`deploy_automation_scripts.yml`** workflow automates deployment. It:  
-- Verifies `crontab.txt` exists.  
-- Deploys scripts and `crontab.txt` to the Raspberry Pi.  
-- Updates the crontab via SSH.
-
----
-
-## Tools & Tech
-- **Languages**: Python, SQL  
-- **Database**: PostgreSQL  
-- **Automation**: GitHub Actions, crontab  
+Future plans include integrating **Apache Kafka** for real-time data streams and **Apache Spark** for processing massive datasets efficiently.
 
 ---
 
-## Future Plans
-- Add better error handling to the scripts (because things always go wrong).  
-- Build more comprehensive test cases for automation scripts.  
-- Expand crontab tasks for additional operations.  
-- Document the schema and scripts in greater detail.  
-- Migrate from crontab to Apache Airflow.  
+### 3. vestia_client
+The client-facing application for investors.
+
+#### Key Directories:
+- **`src/`**
+  Main application code.
+  - **`components/`**
+    Reusable UI elements like portfolio charts, trade buttons, and client modals.
+  - **`pages/`**
+    Pages for portfolio insights, trade history, and account settings.
+
+#### Features:
+- User-friendly dashboard for portfolio management.
+- Real-time trading functionality.
+- Insights into account performance and investment trends.
+
+**Future plans to share components across admin and client sites
+**---
+
+### 4. vestia_server
+Node.js-based server providing various APIs for managing accounts, assets, clients, payments, trades, and managed portfolios. The server dynamically creates endpoints for each feature, making it scalable and easy to manage.
+
+#### Key Directories:
+- **`routes/`**
+  Contains subdirectories for each API feature, with JavaScript files implementing specific endpoints.
+
+#### Features:
+- User-friendly dashboard for portfolio management.
+- Real-time trading functionality.
+- Insights into account performance and investment trends.
 
 ---
+## Installation and Setup
 
-## Known Issues
-- Workflow occasionally complains about missing files (usually my fault).  
-- Testing framework needs improvement—currently just running stuff and hoping it works.
+### Prerequisites
+- **Node.js** (for `vestia_admin` and `vestia_client`)
+- **Airflow** (for `vestia_automation`)
+
+### Steps:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/seanjnugent/vestia-platform.git
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Set up Python dependencies for `vestia_automation`:
+   ```bash
+   cd vestia_automation
+   pip install -r requirements.txt
+   ```
+
+4. Run the applications:
+     ```bash
+     npm run dev
+     ```
 
 ---
-
