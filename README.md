@@ -78,7 +78,6 @@ Node.js-based server providing various APIs for managing accounts, assets, clien
 - Real-time trading functionality.
 - Insights into account performance and investment trends.
 
-Future plans to share components across admin and client sites
 ---
 ## Installation and Setup
 
