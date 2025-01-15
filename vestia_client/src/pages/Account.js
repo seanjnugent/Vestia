@@ -207,13 +207,7 @@ const Account = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {portfolioHistory.length > 0 ? (
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2 mb-4">
-              <History size={24} className="text-[#38d6b7]" />
-              Account Performance
-            </h2>
             <PerformanceGraph portfolioHistory={portfolioHistory} />
-          </div>
         ) : (
           <div className="col-span-2 bg-white rounded-2xl shadow-lg p-8 text-center">
             <h2 className="text-xl font-semibold text-gray-600 mb-4">Performance Graph Not Available</h2>
@@ -223,13 +217,9 @@ const Account = () => {
 
         {holdings.length > 0 ? (
           <>
-            <div className="bg-white rounded-2xl shadow-lg p-8">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2 mb-4">
-                <Sparkles size={24} className="text-[#38d6b7]" />
-                Holdings Detail
-              </h2>
+      
               <HoldingsTable holdings={holdings} />
-            </div>
+       
             <div className="bg-white rounded-2xl shadow-lg p-8">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2 mb-4">
                 <PieChartIcon size={24} className="text-[#38d6b7]" />
@@ -245,11 +235,11 @@ const Account = () => {
             <h2 className="text-xl font-semibold mb-4 text-gray-900">No Holdings</h2>
             <p className="text-gray-600">This account currently has no holdings to display.</p>
             <button
-              onClick={() => navigate('/new-payment/one-off')}
-              className="mt-4 px-4 py-2 bg-[#38d6b7] text-white rounded-md hover:bg-[#2bb29b] transition-all duration-300 shadow-md hover:shadow-lg text-sm"
-            >
-              Deposit Now
-            </button>
+            onClick={() => navigate(`/new-instruction/${id}`)}
+            className="mt-4 px-4 py-2 bg-[#38d6b7] text-white rounded-md hover:bg-[#2bb29b] transition-all duration-300 shadow-md hover:shadow-lg text-sm"
+          >
+            Deposit Now
+          </button>
           </div>
         )}
       </div>

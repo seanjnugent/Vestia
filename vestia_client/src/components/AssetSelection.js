@@ -1,4 +1,3 @@
-// src/components/AssetSelection.js
 import React, { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { motion } from "framer-motion";
@@ -8,11 +7,10 @@ const AssetSelection = ({ selectedAssets, setSelectedAssets }) => {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch assets from the API endpoint
   useEffect(() => {
     const fetchAssets = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/assets/assets");
+        const response = await fetch("http://localhost:5000/api/assets/getAssets/assets");
         const data = await response.json();
         setAssets(data);
         setLoading(false);
@@ -32,7 +30,7 @@ const AssetSelection = ({ selectedAssets, setSelectedAssets }) => {
   const handleAssetSelection = (asset) => {
     const isSelected = selectedAssets.some(a => a.asset_id === asset.asset_id);
     setSelectedAssets(
-      isSelected ? selectedAssets.filter(a => a.asset_id !== asset.asset_id) : [...selectedAssets, asset]
+      isSelected ? selectedAssets.filter(a => a.asset_id !== asset.asset_id) : [...selectedAssets, { ...asset, allocation_amount: 0 }]
     );
   };
 

@@ -18,6 +18,7 @@ import ResearchStocks from './pages/ResearchStocks';
 import Documents from './pages/Documents';
 import Register from './components/Register';
 import NewRegularPayment from './pages/NewRegularPayment';
+import NewInstruction from './pages/NewInstruction';
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('token'); // Check for token
@@ -60,6 +61,7 @@ function App() {
                     <Route path="/documents" element={<Documents />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/new-regular-payment" element={<NewRegularPayment />} />
+                    <Route path="/new-instruction/:id" element={<NewInstruction />} />
                   </Routes>
                 </main>
               </div>
