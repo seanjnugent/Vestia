@@ -16,49 +16,44 @@ const NewInstruction = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     // Validate amount
     const parsedAmount = parseInt(amount, 10);
     if (isNaN(parsedAmount) || parsedAmount < 10) {
       alert('Amount must be a round number and at least 10.');
       return;
     }
-
+  
     // Handle dates
     const today = new Date();
     const nextRunDateValue = firstDate || today.toISOString().split('T')[0]; // Default to today if not set
-
-    const instructionDetails = {
-      frequency,
-      amount: parsedAmount,
-      bankAccountId,
-      firstDate,
-      nextRunDate: nextRunDateValue,
-    };
-
-    const allocation = {
-      assets: selectedAssets.map(asset => ({
+  
+    const payload = {
+      account_id: id,
+      instruction_type: 'RegularDeposit',
+      instruction_status: 'Pending', // Assuming a default status is required
+      instruction_frequency: frequency,
+      instruction_amount: parsedAmount,
+      bank_account_id: bankAccountId,
+      first_date: firstDate,
+      next_run_date: nextRunDateValue,
+      allocation: selectedAssets.map(asset => ({
         asset_id: asset.asset_id,
-        allocation_amount: asset.allocation_amount,
-      })),
+        allocation_amount: parseFloat(asset.allocation_amount), // Ensure it's numeric
+      })),      
     };
-
+  
     try {
       const response = await fetch('http://localhost:5000/api/payments/postNewInstruction', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          account_id: id,
-          instruction_type: 'RegularDeposit',
-          instruction_details: instructionDetails,
-          allocation,
-        }),
+        body: JSON.stringify(payload),
       });
-
+  
       const data = await response.json();
-
+  
       if (response.ok) {
         alert('Instruction created successfully.');
         navigate('/accounts'); // Redirect to the accounts page or any other page
@@ -70,6 +65,7 @@ const NewInstruction = () => {
       alert('Failed to create instruction.');
     }
   };
+  
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">

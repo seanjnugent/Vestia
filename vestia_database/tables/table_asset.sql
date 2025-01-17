@@ -1,0 +1,26 @@
+CREATE TABLE asset
+(
+    asset_id integer NOT NULL,
+    asset_code character varying(50),
+    asset_name character varying(100),
+    asset_type character varying(50),
+    asset_status character varying(20),
+    currency_code character varying(3),
+    asset_details json,
+    sector character varying(100),
+    industry character varying(100),
+    market_cap bigint,
+    shares_outstanding bigint,
+    dividend_yield numeric,
+    pe_ratio numeric,
+    eps numeric,
+    fifty_two_week_high numeric,
+    fifty_two_week_low numeric,
+    volume bigint,
+    average_volume bigint,
+    country character varying(100),
+    logo_url character varying(255),
+    date_created timestamp without time zone,
+    date_updated timestamp without time zone
+),
+    PRIMARY KEY (asset_id);

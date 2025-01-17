@@ -222,8 +222,8 @@ def create_trades():
 
                     conn.execute(text("""
                         INSERT INTO asset_trade (
-                            account_id, asset_id, asset_trade_quantity, asset_trade_unit_cost, asset_trade_type, asset_trade_status, date_placed, date_created, date_updated
-                        ) VALUES (:account_id, :asset_id, :quantity, :asset_price, 'Buy', 'Completed', :now, :now, :now);
+                            account_id, asset_id, asset_trade_quantity, asset_trade_unit_cost, asset_trade_type, asset_trade_status, date_placed, date_created, date_updated, date_completed
+                        ) VALUES (:account_id, :asset_id, :quantity, :asset_price, 'Buy', 'Completed', :now, :now, :now, :now);
                     """), {
                         "account_id": account_id,
                         "asset_id": asset_id,
@@ -234,8 +234,8 @@ def create_trades():
 
                     conn.execute(text("""
                         INSERT INTO cash_trade (
-                            account_id, amount, currency_code, cash_trade_status, cash_trade_note, date_created, date_updated
-                        ) VALUES (:account_id, :amount, :currency_code, 'Completed', :note, :now, :now);
+                            account_id, amount, currency_code, cash_trade_status, cash_trade_note, date_created, date_updated, date_completed
+                        ) VALUES (:account_id, :amount, :currency_code, 'Completed', :note, :now, :now, :now);
                     """), {
                         "account_id": account_id,
                         "amount": -total_cost,
@@ -259,8 +259,8 @@ def create_trades():
 
                     conn.execute(text("""
                         INSERT INTO asset_trade (
-                            account_id, asset_id, asset_trade_quantity, asset_trade_unit_cost, asset_trade_type, asset_trade_status, date_placed, date_created, date_updated
-                        ) VALUES (:account_id, :asset_id, :quantity, :asset_price, 'Sell', 'Completed', :now, :now, :now);
+                            account_id, asset_id, asset_trade_quantity, asset_trade_unit_cost, asset_trade_type, asset_trade_status, date_placed, date_created, date_updated, date_completed
+                        ) VALUES (:account_id, :asset_id, :quantity, :asset_price, 'Sell', 'Completed', :now, :now, :now, :now);
                     """), {
                         "account_id": account_id,
                         "asset_id": asset_id,
@@ -271,8 +271,8 @@ def create_trades():
 
                     conn.execute(text("""
                         INSERT INTO cash_trade (
-                            account_id, amount, currency_code, cash_trade_status, cash_trade_note, date_created, date_updated
-                        ) VALUES (:account_id, :amount, :currency_code, 'Completed', :note, :now, :now);
+                            account_id, amount, currency_code, cash_trade_status, cash_trade_note, date_created, date_updated, date_completed
+                        ) VALUES (:account_id, :amount, :currency_code, 'Completed', :note, :now, :now, :now);
                     """), {
                         "account_id": account_id,
                         "amount": total_cost,
