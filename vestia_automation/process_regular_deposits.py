@@ -60,11 +60,11 @@ def process_regular_deposits():
                     amount,
                     currency_code,
                     instruction_id,
-                    cash_trade_status,
-                    cash_trade_note,
+                    trade_status,
+                    trade_note,
                     date_created,
                     date_updated,
-                    cash_trade_type
+                    trade_type
                 )
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING cash_trade_id
@@ -104,20 +104,17 @@ def process_regular_deposits():
                     INSERT INTO asset_trade (
                         account_id,
                         asset_id,
-                        asset_trade_quantity,
-                        asset_trade_unit_cost,
-                        asset_trade_type,
-                        asset_trade_status,
+                        quote_units,
+                        quote_price,
+                        trade_type,
+                        trade_status,
                         currency_code,
-                        local_currency_amount,
                         instruction_id,
-                        date_placed,
                         date_created,
                         date_updated,
-                        quote_price,
-                        target_quantity
+                        date_placed
                     )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     RETURNING asset_trade_id
                 """, (
                     account_id,
@@ -127,13 +124,10 @@ def process_regular_deposits():
                     'Buy',
                     'Pending',
                     'USD',
-                    float(allocation_amount),
                     instruction_id,
                     datetime.now(),
                     datetime.now(),
-                    datetime.now(),
-                    latest_price,
-                    units
+                    datetime.now()
                 ))
                 
                 # Capture the asset_trade_id
@@ -146,13 +140,13 @@ def process_regular_deposits():
                         amount,
                         currency_code,
                         instruction_id,
-                        cash_trade_status,
-                        cash_trade_note,
+                        trade_status,
+                        trade_note,
                         date_created,
                         date_updated,
-                        asset_trade_id,
+                        linked_asset_trade_id,
                         linked_cash_trade_id,
-                        cash_trade_type
+                        trade_type
                     )
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (

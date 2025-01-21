@@ -7,8 +7,9 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: '#1D4ED8', // Your custom blue color
-        secondary: '#9333EA', // Your custom purple color
+        primary: '#1D4ED8',       // Your custom blue color
+        secondary: '#9333EA',      // Your custom purple color
+        turkishBlue: '#1e90a7',        // Adding your custom color here
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

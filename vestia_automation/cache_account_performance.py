@@ -32,11 +32,12 @@ def get_relevant_accounts(start_date, end_date):
             SELECT account_id
             FROM public.cash_trade
             WHERE date_completed::date <= current_date
-            AND cash_trade_status = 'Completed'
+            AND trade_status = 'Completed'
             UNION
             SELECT account_id
             FROM public.asset_trade
             WHERE date_completed::date <= current_date
+            AND trade_status = 'Completed'
         ) combined
         ORDER BY account_id
     """)
@@ -54,7 +55,7 @@ def process_account(account_id, start_date, end_date):
                 SELECT MIN(date_completed::date) as first_activity_date
                 FROM public.cash_trade
                 WHERE account_id = :account_id
-                AND cash_trade_status = 'Completed'
+                AND trade_status = 'Completed'
                 UNION
                 SELECT MIN(date_completed::date)
                 FROM public.asset_trade
@@ -76,7 +77,7 @@ def process_account(account_id, start_date, end_date):
             SELECT
                 ds.date,
                 at.asset_id,
-                SUM(at.asset_trade_quantity) as balance
+                SUM(at.filled_units) as balance
             FROM date_series ds
             CROSS JOIN (
                 SELECT DISTINCT asset_id
@@ -89,7 +90,7 @@ def process_account(account_id, start_date, end_date):
                 AND at.account_id = :account_id
                 AND at.date_completed::date <= ds.date
             GROUP BY ds.date, at.asset_id
-            HAVING SUM(at.asset_trade_quantity) != 0
+            HAVING SUM(at.filled_units) != 0
         ),
         daily_prices AS (
             SELECT DISTINCT ON (rab.date, rab.asset_id)
@@ -118,7 +119,7 @@ def process_account(account_id, start_date, end_date):
             FROM date_series ds
             LEFT JOIN public.cash_trade ct ON
                 ct.account_id = :account_id
-                AND ct.cash_trade_status = 'Completed'
+                AND ct.trade_status = 'Completed'
             GROUP BY ds.date
         ),
         daily_totals AS (
@@ -249,7 +250,7 @@ default_args = {
 }
 
 dag = DAG(
-    'account_performance_processing',
+    'cache_account_performance',
     default_args=default_args,
     description='Process account performance data',
     schedule_interval='@daily',

@@ -40,8 +40,8 @@ def process_pending_deposits():
             FROM 
                 cash_trade
             WHERE 
-                cash_trade_status = 'Pending'
-                AND cash_trade_type = 'Deposit';
+                trade_status = 'Pending'
+                AND trade_type = 'Deposit';
         """)
         pending_deposits = cursor.fetchall()
 
@@ -51,7 +51,7 @@ def process_pending_deposits():
             cursor.execute("""
                 UPDATE cash_trade
                 SET 
-                    cash_trade_status = 'Completed',
+                    trade_status = 'Completed',
                     date_completed = %s,
                     date_updated = %s
                 WHERE 

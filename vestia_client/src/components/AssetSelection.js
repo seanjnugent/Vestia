@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { motion } from "framer-motion";
 
-const AssetSelection = ({ selectedAssets, setSelectedAssets }) => {
+const AssetSelection = ({ selectedAssets, setSelectedAssets, tradeType }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,7 @@ const AssetSelection = ({ selectedAssets, setSelectedAssets }) => {
   const handleAssetSelection = (asset) => {
     const isSelected = selectedAssets.some(a => a.asset_id === asset.asset_id);
     setSelectedAssets(
-      isSelected ? selectedAssets.filter(a => a.asset_id !== asset.asset_id) : [...selectedAssets, { ...asset, allocation_amount: 0 }]
+      isSelected ? selectedAssets.filter(a => a.asset_id !== asset.asset_id) : [...selectedAssets, { ...asset, allocation: { amount: 0, units: 0 } }]
     );
   };
 

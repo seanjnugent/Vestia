@@ -96,7 +96,7 @@ default_args = {
 }
 
 dag = DAG(
-    'client_performance_aggregation',
+    'cache_client_performance',
     default_args=default_args,
     description='Aggregate account performance data into client performance data',
     schedule_interval='0 2 * * *',  # Run daily at 2 AM

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { BeatLoader } from "react-spinners";
-const AccountSelection = ({ onContinue }) => {
+import PropTypes from "prop-types";
+
+const AccountSelection = ({ selectedAccount, setSelectedAccount, onContinue }) => {
   const [accounts, setAccounts] = useState([]);
-  const [selectedAccount, setSelectedAccount] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -11,18 +12,20 @@ const AccountSelection = ({ onContinue }) => {
     const fetchClientAccounts = async () => {
       const clientId = localStorage.getItem("userId");
       if (!clientId) {
-        setError("No user ID found");
+        setError("No user ID found. Please log in again.");
         setLoading(false);
         return;
       }
 
       try {
         const response = await fetch(
-          `http://localhost:5000/api/accounts/client-accounts/${clientId}`
+          `http://localhost:5000/api/accounts/getClientAccounts/${clientId}`
         );
+
         if (!response.ok) {
-          throw new Error("Failed to fetch accounts");
+          throw new Error(`Failed to fetch accounts: ${response.statusText}`);
         }
+
         const data = await response.json();
         setAccounts(data);
       } catch (err) {
@@ -51,6 +54,14 @@ const AccountSelection = ({ onContinue }) => {
     );
   }
 
+  if (accounts.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-gray-700 text-xl">No accounts found.</div>
+      </div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -63,11 +74,13 @@ const AccountSelection = ({ onContinue }) => {
         </label>
         <div className="space-y-3">
           {accounts.map((acc) => (
-            <button
+            <motion.button
               key={acc.account_id}
-              onClick={() => setSelectedAccount(acc)} // Store the full account object
+              onClick={() => setSelectedAccount(acc)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                selectedAccount?.account_id === acc.account_id // Compare account_id for highlighting
+                selectedAccount?.account_id === acc.account_id
                   ? "border-blue-500 bg-blue-50"
                   : "border-gray-200 hover:border-blue-300"
               }`}
@@ -86,13 +99,15 @@ const AccountSelection = ({ onContinue }) => {
                   </p>
                 </div>
               </div>
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>
-      <button
-        onClick={() => onContinue(selectedAccount)} // Pass the entire selected account object
+      <motion.button
+        onClick={onContinue}
         disabled={!selectedAccount}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         className={`w-full py-3 rounded-xl transition-all ${
           selectedAccount
             ? "bg-blue-500 text-white hover:bg-blue-600"
@@ -100,9 +115,15 @@ const AccountSelection = ({ onContinue }) => {
         }`}
       >
         Continue
-      </button>
+      </motion.button>
     </motion.div>
   );
+};
+
+AccountSelection.propTypes = {
+  selectedAccount: PropTypes.object,
+  setSelectedAccount: PropTypes.func.isRequired,
+  onContinue: PropTypes.func.isRequired,
 };
 
 export default AccountSelection;

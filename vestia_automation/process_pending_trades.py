@@ -110,83 +110,44 @@ def get_view_price(asset_id, cursor):
 def get_pending_trades(cursor):
     """Get all pending trades with separate handling for instruction and manual trades"""
     cursor.execute("""
-        SELECT 
-            ct.cash_trade_id,
-            ct.account_id,
-            ct.amount,
-            ct.instruction_id,
-            ct.asset_trade_id,
-            at.asset_id,
-            at.target_quantity,
-            at.quote_price,
-            ctd.instruction_status,
-            ctd.instruction_frequency,
-            a.asset_code,
-            'instruction' as trade_type,
-            ctd.instruction_amount as total_instruction_amount,
-            ct.cash_trade_note
-        FROM public.cash_trade ct
-        INNER JOIN public.asset_trade at 
-            ON ct.instruction_id = at.instruction_id 
-            AND ct.asset_trade_id = at.asset_trade_id
-        JOIN (
-            SELECT cash_trade_id, a.instruction_id, instruction_status, instruction_frequency, instruction_amount
-            FROM public.cash_trade a
-            INNER JOIN instruction i ON a.instruction_id = i.instruction_id
-            WHERE cash_trade_type = 'Deposit' AND cash_trade_status = 'Completed'
-        ) ctd ON ctd.instruction_id = ct.instruction_id and ct.linked_cash_trade_id = ctd.cash_trade_id
-        LEFT JOIN public.asset a ON at.asset_id = a.asset_id
-        WHERE ct.cash_trade_status = 'Pending'
-        AND ct.instruction_id IS NOT NULL
-        AND (
-            (ct.amount > 0 AND at.asset_id IS NULL) OR
-            (ct.amount < 0 AND at.asset_trade_status = 'Pending')
-        )
-        UNION ALL
-        SELECT 
-            ct.cash_trade_id,
-            ct.account_id,
-            ct.amount,
-            ct.instruction_id,
-            ct.asset_trade_id,
-            at.asset_id,
-            at.target_quantity,
-            at.quote_price,
-            NULL as instruction_status,
-            NULL as instruction_frequency,
-            a.asset_code,
-            'manual' as trade_type,
-            NULL as total_instruction_amount,
-            ct.cash_trade_note
-        FROM public.cash_trade ct
-        JOIN public.asset_trade at ON ct.asset_trade_id = at.asset_trade_id
-        JOIN public.asset a ON at.asset_id = a.asset_id
-        WHERE ct.cash_trade_status = 'Pending' 
-        AND ct.instruction_id IS NULL
-        AND at.asset_trade_status = 'Pending'
+     SELECT 
+    ct.cash_trade_id,
+    ct.account_id,
+    ct.amount,
+    ct.instruction_id,
+    ct.linked_asset_trade_id,
+    at.asset_id,
+    at.quote_units,
+    at.quote_price,
+    at.trade_type,  -- Use trade_type from asset_trade (Buy/Sell)
+    at.trade_mode,  -- Use trade_mode from asset_trade (VALUE/UNITS)
+    ctd.instruction_status,
+    ctd.instruction_frequency,
+    a.asset_code,
+    CASE 
+        WHEN ct.instruction_id IS NOT NULL THEN 'instruction'
+        ELSE 'manual'
+    END AS trade_category,  -- Derive instruction/manual based on instruction_id
+    ctd.instruction_amount as total_instruction_amount,
+    ct.trade_note  -- Use trade_note instead of cash_trade_note
+FROM public.cash_trade ct
+INNER JOIN public.asset_trade at 
+    ON ct.linked_asset_trade_id = at.asset_trade_id
+LEFT JOIN (
+    SELECT cash_trade_id, a.instruction_id, instruction_status, instruction_frequency, instruction_amount
+    FROM public.cash_trade a
+    INNER JOIN instruction i ON a.instruction_id = i.instruction_id
+    WHERE trade_type = 'Deposit' AND trade_status = 'Completed'
+) ctd ON ctd.instruction_id = ct.instruction_id AND ct.linked_cash_trade_id = ctd.cash_trade_id
+LEFT JOIN public.asset a ON at.asset_id = a.asset_id
+WHERE ct.trade_status = 'Pending'
+AND at.trade_status = 'Pending'
     """)
     return cursor.fetchall()
 
 def process_trade(trade, cursor):
-    """Process a single trade with consideration for instruction vs manual trades"""
+    """Process a single trade with consideration for Buy/Sell and trade_mode"""
     try:
-        # Handle instruction deposit first
-        if trade['trade_type'] == 'instruction' and trade['amount'] > 0:
-            cursor.execute("""
-                UPDATE public.cash_trade
-                SET cash_trade_status = 'Completed',
-                    date_completed = CURRENT_TIMESTAMP,
-                    date_updated = CURRENT_TIMESTAMP
-                WHERE cash_trade_id = %s
-            """, (trade['cash_trade_id'],))
-            
-            return {
-                'status': 'Completed',
-                'trade_type': 'instruction_deposit',
-                'cash_trade_id': trade['cash_trade_id'],
-                'amount': float(trade['amount'])  # Convert to float
-            }
-
         # For asset trades (both instruction and manual)
         if trade['asset_id']:
             price_info = get_live_price(trade['asset_id'], cursor)
@@ -195,48 +156,77 @@ def process_trade(trade, cursor):
 
             live_price = Decimal(str(price_info['latest_price']))
             cash_amount = abs(Decimal(str(trade['amount'])))
-            actual_quantity = (cash_amount / live_price).quantize(Decimal('0.000001'))
 
-            # Update asset_trade_note
-            asset_trade_note = f"Bought {actual_quantity} assets of {trade['asset_code']}"
+            # Determine if it's a Buy or Sell trade based on trade_type from asset_trade
+            is_buy_trade = trade['trade_type'] == 'Buy'
+            is_sell_trade = trade['trade_type'] == 'Sell'
+
+            if is_buy_trade:
+                # Buy trade logic
+                if trade['trade_mode'] == 'VALUE':
+                    # Calculate units based on the value to be bought
+                    actual_quantity = (cash_amount / live_price).quantize(Decimal('0.000001'))
+                else:
+                    # Use the specified units directly
+                    actual_quantity = Decimal(str(trade['quote_units']))
+
+                trade_note = f"Bought {actual_quantity} units of {trade['asset_code']}"
+            elif is_sell_trade:
+                # Sell trade logic
+                if trade['trade_mode'] == 'VALUE':
+                    # Calculate units based on the value to be sold
+                    actual_quantity = (cash_amount / live_price).quantize(Decimal('0.000001'))
+                else:
+                    # Use the specified units directly
+                    actual_quantity = abs(Decimal(str(trade['quote_units'])))
+
+                # Check if the account has enough units to sell
+                cursor.execute("""
+                    SELECT asset_holding
+                    FROM public.vw_asset_balance
+                    WHERE account_id = %s AND asset_id = %s
+                """, (trade['account_id'], trade['asset_id']))
+                asset_holding = cursor.fetchone()
+
+                if not asset_holding or asset_holding['asset_holding'] < actual_quantity:
+                    raise Exception(f"Insufficient units to sell for asset_id {trade['asset_id']}")
+
+                trade_note = f"Sold {actual_quantity} units of {trade['asset_code']}"
+                actual_quantity = -actual_quantity  # Negative for Sell trades
 
             # Update trades
             cursor.execute("""
                 UPDATE public.cash_trade
-                SET cash_trade_status = 'Completed',
+                SET trade_status = 'Completed',
                     date_completed = CURRENT_TIMESTAMP,
                     date_updated = CURRENT_TIMESTAMP,
-                    cash_trade_note = %s
+                    trade_note = %s  -- Use trade_note
                 WHERE cash_trade_id = %s;
 
                 UPDATE public.asset_trade
-                SET asset_trade_status = 'Completed',
+                SET trade_status = 'Completed',
                     filled_price = %s,
-                    asset_trade_unit_cost = %s,
-                    filled_quantity = %s,
-                    asset_trade_quantity = %s,  -- Update asset_trade_quantity
+                    filled_units = %s,
                     date_completed = CURRENT_TIMESTAMP,
                     date_updated = CURRENT_TIMESTAMP,
-                    asset_trade_note = %s
+                    trade_note = %s  -- Use trade_note
                 WHERE asset_trade_id = %s;
             """, (
-                asset_trade_note,  # Updated cash_trade_note
+                trade_note,  # Updated trade_note for cash_trade
                 trade['cash_trade_id'],
                 float(live_price),  # Convert to float
-                float(live_price),  # Convert to float
                 float(actual_quantity),  # Convert to float
-                float(actual_quantity),  # Convert to float
-                asset_trade_note,  # Updated asset_trade_note
-                trade['asset_trade_id']
+                trade_note,  # Updated trade_note for asset_trade
+                trade['linked_asset_trade_id']  # Use linked_asset_trade_id
             ))
 
             return {
                 'status': 'completed',
                 'trade_type': trade['trade_type'],
-                'asset_trade_id': trade['asset_trade_id'],
+                'asset_trade_id': trade['linked_asset_trade_id'],  # Use linked_asset_trade_id
                 'cash_trade_id': trade['cash_trade_id'],
                 'asset_code': trade['asset_code'],
-                'filled_quantity': float(actual_quantity),  # Convert to float
+                'filled_units': float(actual_quantity),  # Convert to float
                 'filled_price': float(live_price)  # Convert to float
             }
 

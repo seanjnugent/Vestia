@@ -119,7 +119,7 @@ const Account = () => {
         <div className="flex justify-between items-start">
           <div className="space-y-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className="text-4xl font-bold" style={{ color: '#1e90a7' }}>
                 {accountDetails?.account_name}
               </h1>
               <p className="text-gray-500 text-sm mt-1">
@@ -162,7 +162,7 @@ const Account = () => {
             <div className="flex gap-2 mt-4 justify-end relative">
               <button
                 onClick={() => navigate('/new-trade')}
-                className="flex items-center gap-1 px-4 py-2 bg-[#38d6b7] text-white rounded-md hover:bg-[#2bb29b] transition-all duration-300 shadow-md hover:shadow-lg text-sm"
+                className="flex items-center gap-1 px-4 py-2 bg-[#1e90a7] text-white rounded-md hover:bg-[#2bb29b] transition-all duration-300 shadow-md hover:shadow-lg text-sm"
               >
                 <RefreshCw size={14} />
                 <span>New Trade</span>
@@ -170,26 +170,26 @@ const Account = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowPaymentMenu(!showPaymentMenu)}
-                  className="flex items-center gap-1 px-4 py-2 bg-[#38d6b7] text-white rounded-md hover:bg-[#2bb29b] transition-all duration-300 shadow-md hover:shadow-lg text-sm"
+                  className="flex items-center gap-1 px-4 py-2 bg-[#1e90a7] text-white rounded-md hover:bg-[#2bb29b] transition-all duration-300 shadow-md hover:shadow-lg text-sm"
                 >
                   <Wallet size={14} />
                   <span>New Payment</span>
                 </button>
                 {showPaymentMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 py-1 z-10">
-                    <button
-                      onClick={() => {
-                        navigate('/new-payment/one-off');
-                        setShowPaymentMenu(false);
-                      }}
-                      className="w-full px-4 py-2 text-left text-gray-700 hover:bg-[#e6f0ee] flex items-center gap-2 text-sm"
-                    >
+                  <button
+                    onClick={() => {
+                      navigate(`/new-deposit/${id}`);
+                      setShowPaymentMenu(false);
+                    }}
+                    className="w-full px-4 py-2 text-left text-gray-700 hover:bg-[#e6f0ee] flex items-center gap-2 text-sm"
+                  >
                       <PlusCircle size={14} />
                       <span>One-off Payment</span>
                     </button>
                     <button
                       onClick={() => {
-                        navigate('/new-payment/regular');
+                        navigate('/new-instruction/${id}');
                         setShowPaymentMenu(false);
                       }}
                       className="w-full px-4 py-2 text-left text-gray-700 hover:bg-[#e6f0ee] flex items-center gap-2 text-sm"
@@ -207,7 +207,7 @@ const Account = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {portfolioHistory.length > 0 ? (
-            <PerformanceGraph portfolioHistory={portfolioHistory} />
+            <PerformanceGraph portfolioHistory={portfolioHistory} liveData={accountDetails} />
         ) : (
           <div className="col-span-2 bg-white rounded-2xl shadow-lg p-8 text-center">
             <h2 className="text-xl font-semibold text-gray-600 mb-4">Performance Graph Not Available</h2>
@@ -217,9 +217,7 @@ const Account = () => {
 
         {holdings.length > 0 ? (
           <>
-      
-              <HoldingsTable holdings={holdings} />
-       
+            <HoldingsTable holdings={holdings} />
             <div className="bg-white rounded-2xl shadow-lg p-8">
               <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2 mb-4">
                 <PieChartIcon size={24} className="text-[#38d6b7]" />

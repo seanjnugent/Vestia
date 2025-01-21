@@ -83,3 +83,25 @@
     --radius: 0.5rem;
   }
 }
+
+@keyframes gradient-x {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-x {
+  background-size: 200% 200%;
+  animation: gradient-x 15s ease infinite;
+}
+
+/* Add to your CSS or inline styles */
+.flex-item {
+  min-height: 100px; /* or whatever fixed height you need */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}

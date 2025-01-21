@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Link, useParams } from "react-router-dom";
-import { Plus, ChevronRight, Calendar } from "react-feather";
+import { useParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import PaymentsTable from "../components/PaymentsTable";
+import InstructionsTable from "../components/InstructionsTable";
 
 const Payments = () => {
   const { clientId } = useParams();
@@ -10,17 +11,12 @@ const Payments = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [oneOffPayments, setOneOffPayments] = useState([]);
-  const [depositData] = useState([
-    {
-      id: 1,
-      frequency: "Monthly",
-      nextDate: "2024-12-25",
-      amount: "$1000",
-      account: "Personal Account",
-    },
-  ]);
+  const [instructions, setInstructions] = useState([]);
+  const [currentPaymentsPage, setCurrentPaymentsPage] = useState(1);
+  const [currentInstructionsPage, setCurrentInstructionsPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
-  const fetchCashTrades = useCallback(async () => {
+  const fetchPayments = useCallback(async () => {
     const storedClientId = localStorage.getItem("userId");
     if (!storedClientId) {
       setError("Client ID is missing");
@@ -29,20 +25,27 @@ const Payments = () => {
     }
 
     try {
-      const response = await fetch(
+      const paymentsResponse = await fetch(
         `http://localhost:5000/api/payments/getClientPayments/${storedClientId}`
       );
+      const instructionsResponse = await fetch(
+        `http://localhost:5000/api/payments/getClientInstructions/${storedClientId}`
+      );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!paymentsResponse.ok || !instructionsResponse.ok) {
+        throw new Error(
+          `HTTP error! status: ${paymentsResponse.status}, ${instructionsResponse.status}`
+        );
       }
 
-      const data = await response.json();
-      console.log("Received data:", data); // Debug log
-      setOneOffPayments(Array.isArray(data) ? data : []);
+      const paymentsData = await paymentsResponse.json();
+      const instructionsData = await instructionsResponse.json();
+
+      setOneOffPayments(Array.isArray(paymentsData) ? paymentsData : []);
+      setInstructions(Array.isArray(instructionsData) ? instructionsData : []);
       setIsLoading(false);
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
       setError(error.message);
       setIsLoading(false);
     }
@@ -50,8 +53,8 @@ const Payments = () => {
 
   useEffect(() => {
     setIsLoading(true);
-    fetchCashTrades();
-  }, [fetchCashTrades]);
+    fetchPayments();
+  }, [fetchPayments]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -66,150 +69,97 @@ const Payments = () => {
   const formatAmount = (amount) => {
     if (amount == null) return "N/A";
     try {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
       }).format(Math.abs(amount));
     } catch (error) {
       return "Invalid Amount";
     }
   };
 
-  const getPaymentType = (amount) => amount >= 0 ? "Deposit" : "Withdrawal";
+  const getPaymentType = (amount) => (amount >= 0 ? "Deposit" : "Withdrawal");
 
-  const PaymentsTable = () => (
-    <table className="w-full table-auto border-collapse bg-white rounded-lg shadow-sm">
-      <thead className="bg-[#f1f5f9]">
-        <tr>
-          <th className="px-6 py-3 text-left text-sm font-bold text-gray-700">Date</th>
-          <th className="px-6 py-3 text-left text-sm font-bold text-gray-700">Type</th>
-          <th className="px-6 py-3 text-left text-sm font-bold text-gray-700">Amount</th>
-          <th className="px-6 py-3 text-left text-sm font-bold text-gray-700">Account</th>
-          <th className="px-6 py-3 text-sm font-bold"></th>
-        </tr>
-      </thead>
-      <tbody>
-        {oneOffPayments.length === 0 ? (
-          <tr>
-            <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-              No payments found
-            </td>
-          </tr>
-        ) : (
-          oneOffPayments.map((payment) => (
-            <tr key={payment.cash_trade_id} className="hover:bg-[#f9fafb] transition">
-              <td className="px-6 py-4 flex items-center text-gray-800">
-                <Calendar size={16} className="mr-2 text-[#00836f]" />
-                {formatDate(payment.date_created)}
-              </td>
-              <td className="px-6 py-4 text-gray-800">{getPaymentType(payment.amount)}</td>
-              <td className="px-6 py-4 text-gray-800">{formatAmount(payment.amount)}</td>
-              <td className="px-6 py-4 text-gray-800">{payment.cash_trade_note || 'N/A'}</td>
-              <td className="px-6 py-4 text-right">
-                <Link
-                  to={`/payment-details/${payment.cash_trade_id}`}
-                  className="text-[#00836f] hover:text-[#006a59] flex items-center"
-                >
-                  View Details <ChevronRight size={16} />
-                </Link>
-              </td>
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
+  // Pagination logic for payments
+  const indexOfLastPayment = currentPaymentsPage * itemsPerPage;
+  const indexOfFirstPayment = indexOfLastPayment - itemsPerPage;
+  const currentPayments = oneOffPayments.slice(
+    indexOfFirstPayment,
+    indexOfLastPayment
   );
 
+  // Pagination logic for instructions
+  const indexOfLastInstruction = currentInstructionsPage * itemsPerPage;
+  const indexOfFirstInstruction = indexOfLastInstruction - itemsPerPage;
+  const currentInstructions = instructions.slice(
+    indexOfFirstInstruction,
+    indexOfLastInstruction
+  );
+
+  const paginatePayments = (pageNumber) => setCurrentPaymentsPage(pageNumber);
+  const paginateInstructions = (pageNumber) =>
+    setCurrentInstructionsPage(pageNumber);
+
+  const renderPaginationButtons = (totalItems, currentPage, paginate) => {
+    const pageNumbers = [];
+    for (let i = 1; i <= Math.ceil(totalItems / itemsPerPage); i++) {
+      pageNumbers.push(i);
+    }
+
+    if (pageNumbers.length <= 1) return null; // Don't render pagination if there's only one page
+
+    return (
+      <nav className="flex justify-center mt-4">
+        <ul className="inline-flex space-x-1">
+          {pageNumbers.map((number) => (
+            <li key={number}>
+              <button
+                onClick={() => paginate(number)}
+                className={`px-3 py-1 rounded ${
+                  currentPage === number
+                    ? "bg-primary text-white"
+                    : "bg-white text-primary border border-primary"
+                }`}
+              >
+                {number}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
-      <div className="px-8 py-10">
-        <h1 className="text-3xl font-semibold text-[#00836f]">
-          Payments Dashboard
-        </h1>
-
-        {/* One-Off Payments Section */}
-        <section className="mb-12">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold text-gray-800">Payment History</h2>
-            <button className="bg-[#00836f] hover:bg-[#006a59] text-white font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition duration-200">
-              <Plus size={18} /> <span>New Payment</span>
-            </button>
+    <div className="w-full flex justify-center">
+      <div className="w-full lg:w-3/4 p-4">
+        {isLoading ? (
+          <p>Loading...</p>
+        ) : error ? (
+          <p className="text-red-500">{error}</p>
+        ) : (
+          <div>
+            <PaymentsTable
+              currentPayments={currentPayments}
+              formatDate={formatDate}
+              getPaymentType={getPaymentType}
+              formatAmount={formatAmount}
+              oneOffPayments={oneOffPayments}
+              currentPaymentsPage={currentPaymentsPage}
+              paginatePayments={paginatePayments}
+              renderPaginationButtons={renderPaginationButtons}
+            />
+            <InstructionsTable
+              currentInstructions={currentInstructions}
+              formatDate={formatDate}
+              formatAmount={formatAmount}
+              instructions={instructions}
+              currentInstructionsPage={currentInstructionsPage}
+              paginateInstructions={paginateInstructions}
+              renderPaginationButtons={renderPaginationButtons}
+            />
           </div>
-
-          {error ? (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-              {error}
-            </div>
-          ) : isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#00836f]"></div>
-            </div>
-          ) : (
-            <PaymentsTable />
-          )}
-        </section>
-
-        {/* Regular Deposits Section */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold text-gray-800">Regular Payments</h2>
-            <button
-              className="bg-[#00836f] hover:bg-[#006a59] text-white font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition duration-200"
-              onClick={() => navigate("/new-regular-payment")}
-            >
-              <Plus size={18} /> <span>New Regular Payment</span>
-            </button>
-          </div>
-
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
-            Regular Deposits
-          </h3>
-          {depositData.length === 0 ? (
-            <p className="text-gray-500">No deposits set up yet.</p>
-          ) : (
-            <table className="min-w-full divide-y divide-gray-200 mb-8">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Frequency
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Next Payment Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Account
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3"></th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {depositData.map((deposit) => (
-                  <tr key={deposit.id}>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {deposit.frequency}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {formatDate(deposit.nextDate)}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{deposit.account}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{deposit.amount}</td>
-                    <td className="px-6 py-4 text-right text-sm">
-                      <Link
-                        to={`/regular-deposit/${deposit.id}`}
-                        className="text-[#00836f] hover:text-[#006a59] flex items-center"
-                      >
-                        View Details <ChevronRight size={16} />
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </section>
+        )}
       </div>
     </div>
   );

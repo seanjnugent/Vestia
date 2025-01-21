@@ -18,7 +18,7 @@ default_args = {
 
 # Define the DAG
 dag = DAG(
-    'update_prices_simplified',
+    'ext_update_prices_daily',
     default_args=default_args,
     description='Update asset prices from Yahoo Finance (simplified)',
     schedule_interval='0 22 * * *',  # Run daily at 10 PM

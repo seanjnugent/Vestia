@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../../database');
 
-router.post('/new-client', async (req, res) => {
+router.post('', async (req, res) => {
     const {
       firstName,
       surname,

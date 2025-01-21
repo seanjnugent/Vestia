@@ -117,7 +117,7 @@ def create_users():
     weight_values = list(country_weights.values())
 
     investors = []
-    for _ in range(2):  # Create 2 users
+    for _ in range(1):  # Create 2 users
         country_code = random.choices(country_choices, weights=weight_values, k=1)[0]
         faker = get_faker_instance(country_code)
         investors.append(generate_investor(faker, country_code))
@@ -130,7 +130,7 @@ def create_accounts():
     engine = get_db_engine()
     try:
         with engine.connect() as conn:
-            result = conn.execute(text("SELECT client_id FROM public.client ORDER BY RANDOM() LIMIT 2"))
+            result = conn.execute(text("SELECT client_id FROM public.client ORDER BY RANDOM() LIMIT 1"))
             client_ids = [row[0] for row in result]
 
             accounts_data = []
@@ -161,12 +161,12 @@ def create_deposits():
             result = conn.execute(text("SELECT account_id FROM public.account ORDER BY RANDOM() LIMIT 5"))
             account_ids = [row[0] for row in result]
 
-            deposits_data = []
-            for account_id in account_ids:
-                amount = random.randint(50, 5000)
-                rounded_amount = round(amount / 1000) * 1000
-                if rounded_amount == 0:
-                    continue
+        deposits_data = []
+        for account_id in account_ids:
+            amount = random.randint(50, 250)
+            rounded_amount = round((amount - 25) / 75) * 75 + 25
+            if rounded_amount == 0:
+                continue
 
                 deposit_data = {
                     "account_id": account_id,
@@ -178,16 +178,17 @@ def create_deposits():
                     "cash_trade_status": 'Completed',
                     "date_completed": datetime.now(),
                     "date_created": datetime.now(),
-                    "date_updated": datetime.now()
+                    "date_updated": datetime.now(),
+                    "trade_type": 'Deposit'
                 }
                 deposits_data.append(deposit_data)
 
             insert_query = text("""
                 INSERT INTO cash_trade (
                     account_id, amount, currency_code, instruction_id, corporate_action_id,
-                    cash_trade_note, cash_trade_status, date_completed, date_created, date_updated
+                    trade_note, trade_status, date_completed, date_created, date_updated, trade_type
                 ) VALUES (:account_id, :amount, :currency_code, :instruction_id, :corporate_action_id,
-                          :cash_trade_note, :cash_trade_status, :date_completed, :date_created, :date_updated);
+                          :cash_trade_note, :cash_trade_status, :date_completed, :date_created, :date_updated, :trade_type);
             """)
             for deposit in deposits_data:
                 conn.execute(insert_query, **deposit)
@@ -201,10 +202,10 @@ def create_trades():
     engine = get_db_engine()
     try:
         with engine.connect() as conn:
-            for _ in range(10):  # Create 10 trades
+            for _ in range(25):  # Create 10 trades
                 trade_type = random.choices(['Buy', 'Sell'], weights=[75, 25], k=1)[0]
                 if trade_type == 'Buy':
-                    result = conn.execute(text("SELECT account_id, total_cash_balance FROM public.vw_cash_balance WHERE total_cash_balance > 0 ORDER BY RANDOM() LIMIT 1"))
+                    result = conn.execute(text("SELECT account_id, available_cash_balance FROM public.vw_cash_balance WHERE available_cash_balance > 0 ORDER BY RANDOM() LIMIT 1"))
                     row = result.fetchone()
                     if row is None:
                         logging.error("No account with sufficient cash balance found.")
@@ -222,8 +223,8 @@ def create_trades():
 
                     conn.execute(text("""
                         INSERT INTO asset_trade (
-                            account_id, asset_id, asset_trade_quantity, asset_trade_unit_cost, asset_trade_type, asset_trade_status, date_placed, date_created, date_updated, date_completed
-                        ) VALUES (:account_id, :asset_id, :quantity, :asset_price, 'Buy', 'Completed', :now, :now, :now, :now);
+                            account_id, asset_id, filled_units, filled_price, trade_type, trade_status, date_placed, date_created, date_updated, date_completed, quote_units, quote_price
+                        ) VALUES (:account_id, :asset_id, :quantity, :asset_price, 'Buy', 'Completed', :now, :now, :now, :now, :quantity, :asset_price);
                     """), {
                         "account_id": account_id,
                         "asset_id": asset_id,
@@ -234,8 +235,8 @@ def create_trades():
 
                     conn.execute(text("""
                         INSERT INTO cash_trade (
-                            account_id, amount, currency_code, cash_trade_status, cash_trade_note, date_created, date_updated, date_completed
-                        ) VALUES (:account_id, :amount, :currency_code, 'Completed', :note, :now, :now, :now);
+                            account_id, amount, currency_code, trade_status, trade_note, date_created, date_updated, date_completed, trade_type
+                        ) VALUES (:account_id, :amount, :currency_code, 'Completed', :note, :now, :now, :now, 'Buy');
                     """), {
                         "account_id": account_id,
                         "amount": -total_cost,
@@ -259,8 +260,8 @@ def create_trades():
 
                     conn.execute(text("""
                         INSERT INTO asset_trade (
-                            account_id, asset_id, asset_trade_quantity, asset_trade_unit_cost, asset_trade_type, asset_trade_status, date_placed, date_created, date_updated, date_completed
-                        ) VALUES (:account_id, :asset_id, :quantity, :asset_price, 'Sell', 'Completed', :now, :now, :now, :now);
+                            account_id, asset_id, filled_units, filled_price, trade_type, trade_status, date_placed, date_created, date_updated, date_completed, quote_units, quote_price
+                        ) VALUES (:account_id, :asset_id, :quantity, :asset_price, 'Sell', 'Completed', :now, :now, :now, :now, :quantity, :asset_price);
                     """), {
                         "account_id": account_id,
                         "asset_id": asset_id,
@@ -271,8 +272,8 @@ def create_trades():
 
                     conn.execute(text("""
                         INSERT INTO cash_trade (
-                            account_id, amount, currency_code, cash_trade_status, cash_trade_note, date_created, date_updated, date_completed
-                        ) VALUES (:account_id, :amount, :currency_code, 'Completed', :note, :now, :now, :now);
+                            account_id, amount, currency_code, trade_status, trade_note, date_created, date_updated, date_completed, trade_type
+                        ) VALUES (:account_id, :amount, :currency_code, 'Completed', :note, :now, :now, :now, 'Buy');
                     """), {
                         "account_id": account_id,
                         "amount": total_cost,
@@ -295,7 +296,7 @@ default_args = {
 }
 
 dag = DAG(
-    'simulate_trading_behavior',
+    'testing_manufacture_trader_behaviour',
     default_args=default_args,
     description='Simulate trading behavior by creating users, accounts, deposits, and trades',
     schedule_interval=timedelta(hours=2),  # Run every 2 hours

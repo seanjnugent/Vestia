@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Mail, Lock, ArrowRight } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate(); // Add useNavigate hook
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-  
+    
     try {
       const response = await fetch('http://localhost:5000/api/clients/postClientAuthentication', {
         method: 'POST',
@@ -23,96 +24,137 @@ const Login = () => {
       }
   
       const data = await response.json();
-  
-      // Save user data to localStorage
-      localStorage.setItem('token', '12345'); // Replace with actual token if using JWT
+      localStorage.setItem('token', '12345');
       localStorage.setItem('userId', data.userId);
-  
-      // Redirect to the home page
       navigate('/home');
     } catch (err) {
       console.error('Error during login:', err);
       alert('An error occurred. Please try again.');
     }
   };
-  
-
-  const handleSignUp = () => {
-    navigate("/register"); // Navigate to the Register page
-  };
 
   return (
-    <div className="h-screen relative overflow-hidden">
-      {/* Background with angle */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#00836f] via-[#7fc1b7] to-[#146594]" />
-        <div
-          className="absolute bottom-0 left-0 bg-white"
-          style={{
-            width: "150%",
-            height: "200%",
-            transform: "rotate(-25deg) translateY(60%)",
-            transformOrigin: "bottom",
-          }}
-        />
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Base background with animation */}
+      <style jsx>{`
+        @keyframes gradientBg {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
+        }
+        
+        .animated-gradient {
+          background: linear-gradient(
+            -45deg,
+            #ff7e5f,  /* light coral */
+            #feb47b,  /* light peach */
+            #7c3aed,  /* vibrant purple */
+            #2dd4bf,  /* mint teal */
+            #34d399,  /* light green */
+            #60a5fa,  /* sky blue */
+            #f43f5e,  /* vibrant pink */
+            #a78bfa   /* soft lavender */
+          );
+          background-size: 800% 800%;
+          animation: gradientBg 30s ease infinite;  /* Slowed down the animation */
+        }
+
+        .diagonal-fade {
+          background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 100%);
+          backdrop-filter: blur(10px);
+          transform: skewY(-12deg);
+        }
+      `}</style>
+      
+      <div className="absolute inset-0 animated-gradient" />
+      
+      {/* Moving overlay */}
+      <div className="absolute inset-0 opacity-50">
+        <div className="absolute inset-0 diagonal-fade" />
       </div>
 
-      {/* Form Container */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96">
-        <div className="bg-white p-8 shadow-lg rounded-lg">
-        <div className="flex items-center justify-center">  {/* Center items horizontally and vertically */}
-        <img src="/vestia-client.svg" alt="Vestia Logo" className="h-20 w-20" /> {/* Adjust size of logo */}
-</div>
-          <h2 className="text-3xl font-semibold text-gray-800 text-center">
-          Welcome Back
-          </h2>
-          <p className="text-gray-500 text-center mt-2">
-            Log in to your account
-          </p>
-          <form className="mt-6" onSubmit={handleLogin}>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-600">
-                Email
-              </label>
-              <input
-                type="text"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-indigo-300 text-gray-800"
-                placeholder="Enter your email"
-              />
+      <div className="relative min-h-screen flex items-center justify-center px-4">
+        <div className="w-full max-w-lg">
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-6">
+              <div className="p-4 bg-white/10 rounded-2xl backdrop-blur-xl">
+                <img src="/vestia-logo.png" alt="Vestia Logo" className="h-16 w-16" />
+              </div>
             </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-600">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-indigo-300 text-gray-800"
-                placeholder="Enter your password"
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-400 transition-all"
-            >
-              Log In
-            </button>
-          </form>
-          <div className="mt-4 text-center">
-            <p className="text-sm text-gray-600">Don't have an account?</p>
-            <button
-              onClick={handleSignUp}
-              className="mt-2 text-indigo-500 hover:underline"
-            >
-              Sign Up
-            </button>
+            <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-white to-white/80 text-transparent bg-clip-text tracking-tight">
+              Welcome Back
+            </h1>
+            <p className="text-white/80 text-lg">Sign in to your Vestia account</p>
           </div>
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-400">
-              © {new Date().getFullYear()} Vestia
+
+          <div className="backdrop-blur-xl bg-white/10 p-8 rounded-3xl shadow-2xl border border-white/10">
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div className="space-y-4">
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 group-hover:text-white/80 transition-colors duration-300">
+                    <Mail className="w-5 h-5" />
+                  </div>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-12 pr-6 py-4 bg-black/5 backdrop-blur-xl rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300 text-white placeholder-white/50 border border-white/10"
+                    placeholder="Enter your email"
+                  />
+                </div>
+
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 group-hover:text-white/80 transition-colors duration-300">
+                    <Lock className="w-5 h-5" />
+                  </div>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-12 pr-6 py-4 bg-black/5 backdrop-blur-xl rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-300 text-white placeholder-white/50 border border-white/10"
+                    placeholder="Enter your password"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  className="text-white/80 hover:text-white text-sm transition-colors duration-300"
+                >
+                  Forgot password?
+                </button>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full group relative overflow-hidden px-6 py-4 bg-gradient-to-r from-white/90 to-white/80 hover:from-white hover:to-white text-violet-600 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 font-semibold"
+              >
+                <span>Sign In</span>
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+              </button>
+            </form>
+
+            <div className="mt-8 text-center">
+              <p className="text-white/80 mb-2">Don't have an account?</p>
+              <button
+                onClick={() => navigate("/register")}
+                className="text-white hover:text-white/90 transition-colors duration-300"
+              >
+                Create an account
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-12 text-center">
+            <p className="text-white/60 text-sm">
+              © {new Date().getFullYear()} Vestia. All rights reserved.
             </p>
           </div>
         </div>

@@ -21,10 +21,17 @@ const Accounts = () => {
       try {
         const response = await fetch(`http://localhost:5000/api/accounts/getClientAccounts/${clientId}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch accounts');
+          const errorData = await response.json();
+          if (errorData.message === "No accounts found") {
+            setAccounts([]);
+            setError(null); // Clear any previous error
+          } else {
+            throw new Error('Failed to fetch accounts');
+          }
+        } else {
+          const data = await response.json();
+          setAccounts(data);
         }
-        const data = await response.json();
-        setAccounts(data);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -61,51 +68,57 @@ const Accounts = () => {
     >
       <div className="max-w-5xl mx-auto py-12 px-6 space-y-8">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-semibold text-[#00836f]">
-            My Accounts
+        <h1 className="text-4xl font-bold" style={{ color: '#1e90a7' }}>
+        My Accounts
           </h1>
           <button
-            className="px-4 py-2 bg-[#00836f] text-white rounded-md shadow hover:bg-[#006a59] focus:ring-2 focus:ring-[#38d6b7]"
+            className="px-4 py-2 bg-[#1e90a7] text-white rounded-md shadow hover:bg-[#006a59] focus:ring-2 focus:ring-[#38d6b7]"
             onClick={() => navigate("/new-account")}
           >
             Create New Account
           </button>
         </div>
-        <div className="overflow-hidden rounded-lg shadow">
-          <table className="w-full border-collapse bg-white">
-            <thead className="bg-[#f1f5f9]">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-b">Account ID</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-b">Account Name</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-b">Account Type</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-b">Account Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {accounts.map((account, index) => (
-                <motion.tr
-                  key={account.account_id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className={`hover:bg-[#f9fafb] ${
-                    index % 2 === 0 ? 'bg-white' : 'bg-[#f6f8fa]'
-                  }`}
-                  onClick={() => navigate(`/account/${account.account_id}`)}
-                >
-                  <td className="px-4 py-3 text-sm text-gray-800 border-b">
-                    {`A${account.account_id.toString().padStart(8, '0')}`}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-800 border-b">{account.account_name}</td>
-                  <td className="px-4 py-3 text-sm text-gray-800 border-b">{account.account_type}</td>
-                  <td className="px-4 py-3 text-sm text-gray-800 border-b">
-                    £{Number(account.total_account_value).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {accounts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <p className="text-lg text-gray-600">No active accounts found - create a new account to start investing</p>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-lg shadow">
+            <table className="w-full border-collapse bg-white">
+              <thead className="bg-[#f1f5f9]">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-b">Account ID</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-b">Account Name</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-b">Account Type</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-b">Account Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {accounts.map((account, index) => (
+                  <motion.tr
+                    key={account.account_id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className={`hover:bg-[#f9fafb] ${
+                      index % 2 === 0 ? 'bg-white' : 'bg-[#f6f8fa]'
+                    }`}
+                    onClick={() => navigate(`/account/${account.account_id}`)}
+                  >
+                    <td className="px-4 py-3 text-sm text-gray-800 border-b">
+                      {`A${account.account_id.toString().padStart(8, '0')}`}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-800 border-b">{account.account_name}</td>
+                    <td className="px-4 py-3 text-sm text-gray-800 border-b">{account.account_type}</td>
+                    <td className="px-4 py-3 text-sm text-gray-800 border-b">
+                      £{Number(account.total_account_value).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </motion.div>
   );

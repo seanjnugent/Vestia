@@ -2,6 +2,8 @@ const express = require('express');
 const app = express();
 const port = 5000;
 const cors = require('cors');
+//const kafkaService = require('./services/kafkaService');
+
 app.use(cors());
 
 // Middleware
@@ -14,6 +16,8 @@ const tradeRoutes = require('./routes/trades');
 const paymentRoutes = require('./routes/payments');
 const assetRoutes = require('./routes/assets');
 const managedPortfolioRoutes = require('./routes/managed-portfolios');
+const bankAccountRoutes = require('./routes/bank-accounts');
+//const priceRoutes = require('./routes/prices');
 
 // Use the routes
 app.use('/api/accounts', accountRoutes);
@@ -22,7 +26,11 @@ app.use('/api/trades', tradeRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/assets', assetRoutes);
 app.use('/api/managed-portfolios', managedPortfolioRoutes);
+app.use('/api/bank-accounts', bankAccountRoutes);
+//app.use('/api/prices', priceRoutes);
 
+
+// Test Route
 app.get('/test', (req, res) => {
   res.json({ message: 'Server is working' });
 });
@@ -34,6 +42,16 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
-});
+async function startServer() {
+  try {    
+    app.listen(port, () => {
+      console.log(`Server running on http://localhost:${port}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
+
