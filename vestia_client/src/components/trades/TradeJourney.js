@@ -31,18 +31,59 @@ const TradeJourney = () => {
   // Function to handle input type (amount/units)
   const handleSetInputType = (type) => {
     dispatch({ type: "SET_INPUT_TYPE", payload: type });
+    // Note: SET_TRADE_MODE is now handled in the reducer
+  };
+  
+
+
+  // Function to handle trade confirmation
+  const handleConfirmTrade = async () => {
+    try {
+      const assets = selectedAssets.map(asset => ({
+        asset_id: asset.asset_id,
+        ...(state.tradeMode === 'VALUE'
+          ? { value: asset.allocation?.allocation_amount || 0 }
+          : { units: asset.allocation?.allocation_amount || 0 }
+        ),
+        quote_price: asset.latest_price
+      }));
+  
+      const payload = {
+        account_id: account.account_id,
+        trade_type: tradeType.toLowerCase(),
+        trade_mode: state.tradeMode,
+        assets: JSON.stringify(assets),
+        currency_code: 'USD',
+        trade_note: 'Automated trade submission'
+      };
+  
+      console.log('Debug - Final payload:', payload);
+  
+      // Send the payload to the API
+      const response = await fetch('http://localhost:5000/api/trades/postNewTrade/new-trade', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+  
+      const result = await response.json();
+      if (response.ok) {
+        alert('Trade submitted successfully!');
+        dispatch({ type: "RESET_STATE" }); // Reset the trade journey
+      } else {
+        throw new Error(result.message || 'Trade submission failed');
+      }
+    } catch (error) {
+      console.error('Error submitting trade:', error);
+      alert(`Error: ${error.message}`);
+    }
   };
 
   // Function to move to the next stage
   const handleContinue = () => {
     dispatch({ type: "NEXT_STAGE" });
-  };
-
-  // Function to handle trade confirmation
-  const handleConfirmTrade = () => {
-    // Add logic to submit the trade
-    alert("Trade submitted successfully!");
-    dispatch({ type: "RESET_STATE" }); // Reset the trade journey
   };
 
   // Function to handle going back to the previous stage
@@ -94,7 +135,7 @@ const TradeJourney = () => {
           <TradeReview
             account={account}
             tradeType={tradeType}
-            tradeData={{ selectedAssets, inputType }} // Pass tradeData
+            tradeData={{ selectedAssets, inputType }}
             onConfirm={handleConfirmTrade}
             onBack={handleBack}
             tradeMode={tradeMode}

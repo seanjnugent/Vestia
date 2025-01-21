@@ -1,4 +1,3 @@
-// TradeContext.js
 import React, { createContext, useContext, useReducer } from "react";
 
 const TradeContext = createContext();
@@ -8,6 +7,7 @@ const initialState = {
   tradeType: null, // 'buy' or 'sell'
   selectedAssets: [],
   inputType: "amount", // 'amount' or 'units'
+  tradeMode: "VALUE", // 'VALUE' or 'UNITS'
   stage: 0, // Current step in the trade journey
 };
 
@@ -20,11 +20,19 @@ const tradeReducer = (state, action) => {
     case "SET_SELECTED_ASSETS":
       return { ...state, selectedAssets: action.payload };
     case "SET_INPUT_TYPE":
-      return { ...state, inputType: action.payload };
+      return { 
+        ...state, 
+        inputType: action.payload,
+        tradeMode: action.payload === 'amount' ? 'VALUE' : 'UNITS'
+      };
+    case "SET_TRADE_MODE":
+      return { ...state, tradeMode: action.payload };
     case "NEXT_STAGE":
       return { ...state, stage: state.stage + 1 };
     case "PREV_STAGE":
       return { ...state, stage: state.stage - 1 };
+    case "RESET_STATE":
+      return initialState;
     default:
       return state;
   }
