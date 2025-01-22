@@ -3,26 +3,33 @@ import React, { useState } from 'react';
 import PropTypes from "prop-types";
 
 const TradeAllocation = ({ selectedAssets, setSelectedAssets, amount, inputType, setInputType, onNext, tradeMode }) => {
-  const handleAllocationChange = (assetId, value) => {
-    const numericValue = parseFloat(value) || 0;
-    const updatedAssets = selectedAssets.map(asset => {
-      if (asset.asset_id === assetId) {
-        const allocation = {
-          allocation_amount: numericValue,
-          allocation_type: inputType, // Store the type of allocation
-          estimated_units: inputType === 'amount' ? numericValue / asset.latest_price : numericValue,
-          estimated_value: inputType === 'amount' ? numericValue : numericValue * asset.latest_price
-        };
-        
-        return {
-          ...asset,
-          allocation
-        };
+// In TradeAllocation.js
+const handleAllocationChange = (assetId, value) => {
+  const numericValue = parseFloat(value) || 0;
+  const updatedAssets = selectedAssets.map(asset => {
+    if (asset.asset_id === assetId) {
+      const allocation = {
+        allocation_amount: numericValue,
+        allocation_type: inputType, // Store the type of allocation
+        estimated_units: inputType === 'amount' ? numericValue / asset.latest_price : numericValue,
+        estimated_value: inputType === 'amount' ? numericValue : numericValue * asset.latest_price
+      };
+
+      // Ensure the user cannot sell more than they hold
+      if (tradeMode === 'sell' && allocation.estimated_units > asset.asset_holding) {
+        alert(`You cannot sell more than ${asset.asset_holding} units of ${asset.asset_name}`);
+        return asset;
       }
-      return asset;
-    });
-    setSelectedAssets(updatedAssets);
-  };
+
+      return {
+        ...asset,
+        allocation
+      };
+    }
+    return asset;
+  });
+  setSelectedAssets(updatedAssets);
+};
 
   const handleInputTypeChange = (type) => {
     setInputType(type);

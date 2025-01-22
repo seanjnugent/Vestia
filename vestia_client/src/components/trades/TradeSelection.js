@@ -8,7 +8,8 @@ const TradeSelection = ({
   selectedAssets,
   setSelectedAssets,
   tradeType,
-  onContinue, // Ensure this prop is passed
+  onContinue,
+  account,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [assets, setAssets] = useState([]);
@@ -18,9 +19,12 @@ const TradeSelection = ({
   useEffect(() => {
     const fetchAssets = async () => {
       try {
-        const response = await fetch(
-          `http://localhost:5000/api/assets/getAssets/assets`
-        );
+        let url = "http://localhost:5000/api/assets/getAssets/assets";
+        if (tradeType === "sell" && account) {
+          url = `http://localhost:5000/api/accounts/getAccountHoldings/${account.account_id}`;
+        }
+
+        const response = await fetch(url);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch assets: ${response.statusText}`);
@@ -36,11 +40,10 @@ const TradeSelection = ({
     };
 
     fetchAssets();
-  }, []);
+  }, [tradeType, account]);
 
   const filteredAssets = assets.filter(
     (asset) =>
-      asset.asset_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       asset.asset_code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -106,8 +109,12 @@ const TradeSelection = ({
             }`}
           >
             <div>
-              <p className="font-bold">{asset.asset_name}</p>
-              <p className="text-sm text-gray-500">{asset.asset_code}</p>
+              <p className="font-bold">{asset.asset_code}</p>
+              {tradeType === "sell" && (
+                <p className="text-sm text-gray-500">
+                  Held: {asset.asset_holding} units
+                </p>
+              )}
             </div>
             <div className="text-right">
               <p className="font-semibold">
@@ -129,7 +136,7 @@ const TradeSelection = ({
 
       {/* "Next" button */}
       <motion.button
-        onClick={onContinue} // Ensure this calls the onContinue function
+        onClick={onContinue}
         disabled={selectedAssets.length === 0}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
@@ -149,7 +156,8 @@ TradeSelection.propTypes = {
   selectedAssets: PropTypes.array.isRequired,
   setSelectedAssets: PropTypes.func.isRequired,
   tradeType: PropTypes.oneOf(["buy", "sell"]).isRequired,
-  onContinue: PropTypes.func.isRequired, // Ensure this prop is required
+  onContinue: PropTypes.func.isRequired,
+  account: PropTypes.object,
 };
 
 export default TradeSelection;

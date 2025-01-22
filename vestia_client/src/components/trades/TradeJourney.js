@@ -116,6 +116,7 @@ const TradeJourney = () => {
             setSelectedAssets={handleSetSelectedAssets}
             tradeType={tradeType}
             onContinue={handleContinue}
+            account={account} // Pass the selected account
           />
         );
       case 3:
