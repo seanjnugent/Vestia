@@ -159,7 +159,6 @@ def process_trade(trade, cursor):
 
             # Determine if it's a Buy or Sell trade based on trade_type from asset_trade
             is_buy_trade = trade['trade_type'] == 'Buy'
-            is_sell_trade = trade['trade_type'] == 'Sell'
 
             if is_buy_trade:
                 # Buy trade logic
@@ -171,29 +170,7 @@ def process_trade(trade, cursor):
                     actual_quantity = Decimal(str(trade['quote_units']))
 
                 trade_note = f"Bought {actual_quantity} units of {trade['asset_code']}"
-            elif is_sell_trade:
-                # Sell trade logic
-                if trade['trade_mode'] == 'VALUE':
-                    # Calculate units based on the value to be sold
-                    actual_quantity = (cash_amount / live_price).quantize(Decimal('0.000001'))
-                else:
-                    # Use the specified units directly
-                    actual_quantity = abs(Decimal(str(trade['quote_units'])))
-
-                # Check if the account has enough units to sell
-                cursor.execute("""
-                    SELECT asset_holding
-                    FROM public.vw_asset_balance
-                    WHERE account_id = %s AND asset_id = %s
-                """, (trade['account_id'], trade['asset_id']))
-                asset_holding = cursor.fetchone()
-
-                if not asset_holding or asset_holding['asset_holding'] < actual_quantity:
-                    raise Exception(f"Insufficient units to sell for asset_id {trade['asset_id']}")
-
-                trade_note = f"Sold {actual_quantity} units of {trade['asset_code']}"
-                actual_quantity = -actual_quantity  # Negative for Sell trades
-
+           
             # Update trades
             cursor.execute("""
                 UPDATE public.cash_trade
@@ -278,7 +255,7 @@ def process_all_pending_trades():
 
 # Define PythonOperator
 process_pending_trades_operator = PythonOperator(
-    task_id='process_pending_trades',
+    task_id='process_pending_trades_buy',
     python_callable=process_all_pending_trades,
     dag=dag,
 )

@@ -88,7 +88,7 @@ const PerformanceGraph = ({ portfolioHistory, title = 'Performance', liveData })
             const maxValue = Math.max(...values);
         
             // Add a 5% buffer
-            const buffer = (maxValue - minValue) * 0.05;
+            const buffer = (maxValue - minValue) * 0.10;
             const min = minValue - buffer;
             const max = maxValue + buffer;
         

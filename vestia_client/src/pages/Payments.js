@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import PaymentsTable from "../components/PaymentsTable";
-import InstructionsTable from "../components/InstructionsTable";
+import PaymentsTable from "../components/payments/PaymentsTable";
+import InstructionsTable from "../components/payments/InstructionsTable";
 
 const Payments = () => {
   const { clientId } = useParams();

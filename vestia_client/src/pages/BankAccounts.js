@@ -1,50 +1,125 @@
-import React from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Pencil, Trash2, Plus, CreditCard, Building2, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const BankAccounts = () => {
+  const [hoveredId, setHoveredId] = useState(null);
+
   const accounts = [
-    { id: 1, country: 'UK', type: 'Bank Account', details: { sortCode: '12-34-56', accountNumber: '78901234' } },
-    { id: 2, country: 'US', type: 'Debit Card', details: { cardNumber: '****1234', expiry: '12/25' } },
+    { 
+      id: 1, 
+      country: 'UK', 
+      type: 'Bank Account', 
+      details: { sortCode: '12-34-56', accountNumber: '78901234' },
+      gradient: 'from-purple-600 to-blue-500'
+    },
+    { 
+      id: 2, 
+      country: 'US', 
+      type: 'Debit Card', 
+      details: { cardNumber: '****1234', expiry: '12/25' },
+      gradient: 'from-red-600 to-pink-500'
+    },
   ];
 
+  const getIcon = (type) => {
+    return type === 'Bank Account' ? 
+      <Building2 className="w-8 h-8" /> : 
+      <CreditCard className="w-8 h-8" />;
+  };
+
+  const formatDetails = (account) => {
+    if (account.type === 'Bank Account') {
+      return {
+        primary: account.details.sortCode,
+        secondary: `Account: ${account.details.accountNumber}`
+      };
+    }
+    return {
+      primary: account.details.cardNumber,
+      secondary: `Expires: ${account.details.expiry}`
+    };
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6 space-y-6">
-      <h1 className="text-3xl font-semibold text-[#00836f]">Linked Bank Accounts</h1>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
-          <thead className="bg-[#00836f] text-white">
-            <tr>
-              <th className="py-3 px-6 text-left">Country</th>
-              <th className="py-3 px-6 text-left">Type</th>
-              <th className="py-3 px-6 text-left">Details</th>
-              <th className="py-3 px-6 text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="text-gray-700">
-            {accounts.map(account => (
-              <tr key={account.id} className="border-b border-gray-200">
-                <td className="py-4 px-6">{account.country}</td>
-                <td className="py-4 px-6">{account.type}</td>
-                <td className="py-4 px-6">
-                  {account.type === 'Bank Account' ? 
-                    `Sort Code: ${account.details.sortCode}, Account Number: ${account.details.accountNumber}` 
-                    : 
-                    `Card Number: ${account.details.cardNumber}, Expiry: ${account.details.expiry}`
-                  }
-                </td>
-                <td className="py-4 px-6 text-center">
-                  <Link to={`/edit-account/${account.id}`} className="inline-block text-[#00836f] mx-1"><Pencil /></Link>
-                  <button onClick={() => console.log(`Delete account ${account.id}`)} className="inline-block text-red-500 mx-1"><Trash2 /></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="min-h-screen bg-black text-white p-6 space-y-8">
+      {/* Hero Section */}
+      <div className="relative h-64 rounded-lg overflow-hidden mb-12">
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-transparent z-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
+        <div className="relative z-20 h-full flex flex-col justify-center p-12">
+          <h1 className="text-6xl font-bold mb-4">Your Payment Methods</h1>
+          <p className="text-xl text-gray-300">Manage your linked accounts and cards</p>
+        </div>
       </div>
-      <Link to="/new-bank-account" className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#00836f] hover:bg-[#00695b] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00836f]">
-        Add New Bank Account
-      </Link>
+
+      {/* Accounts Grid */}
+      <div className="mb-12">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">Linked Accounts</h2>
+          <ChevronRight className="w-6 h-6 text-gray-400" />
+        </div>
+        
+        <div className="grid grid-cols-2 gap-6">
+          {accounts.map(account => (
+            <div
+              key={account.id}
+              className="relative rounded-lg overflow-hidden transition-all duration-300 transform hover:scale-105"
+              onMouseEnter={() => setHoveredId(account.id)}
+              onMouseLeave={() => setHoveredId(null)}
+            >
+              <div className={`relative h-48 bg-gradient-to-br ${account.gradient}`}>
+                {/* Content */}
+                <div className="absolute inset-0 p-6 flex flex-col justify-between">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      {getIcon(account.type)}
+                      <h3 className="text-xl font-bold mt-2">{account.type}</h3>
+                      <p className="text-sm text-gray-200">{account.country}</p>
+                    </div>
+                    
+                    {/* Actions */}
+                    <div className={`flex gap-2 transition-opacity duration-300 ${hoveredId === account.id ? 'opacity-100' : 'opacity-0'}`}>
+                      <Link
+                        to={`/edit-account/${account.id}`}
+                        className="p-2 rounded-full bg-black/30 hover:bg-black/50 transition-colors"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Link>
+                      <button
+                        onClick={() => console.log(`Delete account ${account.id}`)}
+                        className="p-2 rounded-full bg-black/30 hover:bg-red-500/50 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Account Details */}
+                  <div className="mt-auto">
+                    <p className="text-2xl font-mono font-bold">{formatDetails(account).primary}</p>
+                    <p className="text-sm text-gray-200">{formatDetails(account).secondary}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* Add New Account Card */}
+          <Link
+            to="/new-bank-account"
+            className="relative h-48 rounded-lg border-2 border-dashed border-gray-700 hover:border-gray-500 transition-colors flex flex-col items-center justify-center gap-4 group"
+          >
+            <div className="w-12 h-12 rounded-full bg-gray-900 group-hover:bg-gray-800 transition-colors flex items-center justify-center">
+              <Plus className="w-6 h-6 text-gray-400 group-hover:text-white transition-colors" />
+            </div>
+            <div className="text-center">
+              <p className="font-bold text-gray-400 group-hover:text-white transition-colors">Add New Account</p>
+              <p className="text-sm text-gray-500 group-hover:text-gray-400 transition-colors">Connect a bank account or card</p>
+            </div>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 };

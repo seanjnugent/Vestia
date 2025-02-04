@@ -117,9 +117,15 @@ const TradeSelection = ({
               )}
             </div>
             <div className="text-right">
-              <p className="font-semibold">
-                ${parseFloat(asset.latest_price).toLocaleString()}
-              </p>
+              {tradeType === "sell" ? (
+                <p className="font-semibold">
+                  Value: ${parseFloat(asset.asset_value).toLocaleString()}
+                </p>
+              ) : (
+                <p className="font-semibold">
+                  ${parseFloat(asset.latest_price).toLocaleString()}
+                </p>
+              )}
               <p
                 className={`text-sm ${
                   asset.asset_status === "Active"
@@ -130,6 +136,7 @@ const TradeSelection = ({
                 {asset.asset_status}
               </p>
             </div>
+
           </div>
         ))}
       </div>
